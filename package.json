@@ -1,26 +1,15 @@
 {
-  "name": "@uniswap/v2-core",
-  "description": "🎛 Core contracts for the UniswapV2 protocol",
-  "version": "1.0.1",
-  "homepage": "https://uniswap.org",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Uniswap/uniswap-v2-core"
+  "name": "cross-chain-stablecoin-contracts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "npx hardhat compile"
   },
-  "keywords": [
-    "uniswap",
-    "ethereum",
-    "v2",
-    "core",
-    "uniswap-v2"
-  ],
-  "files": [
-    "contracts",
-    "build"
-  ],
-  "engines": {
-    "node": ">=10"
-  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
@@ -32,20 +21,16 @@
   "dependencies": {
     "@nomiclabs/hardhat-etherscan": "^2.1.2",
     "@nomiclabs/hardhat-web3": "^2.0.0",
-    "@openzeppelin/contracts": "^3.4.0",
+    "@openzeppelin/contracts": "^4.3.2",
+    "@openzeppelin/contracts-upgradeable": "^4.3.2",
     "@openzeppelin/hardhat-upgrades": "^1.8.2",
+    "async-mutex": "^0.3.2",
     "dotenv": "^10.0.0",
     "hardhat-abi-exporter": "^2.2.1",
     "hardhat-deploy": "^0.7.10",
     "hardhat-deploy-ethers": "*",
     "hardhat-gas-reporter": "^1.0.4",
     "sleep-promise": "^9.1.0",
-    "solidity-coverage": "^0.7.16",
-    "truffle-flattener": "^1.5.0"
-  },
-  "scripts": {
-    "test": "npx hardhat test",
-    "compile": "npx hardhat compile"
-  },
-  "license": "GPL-3.0-or-later"
+    "solidity-coverage": "^0.7.16"
+  }
 }
