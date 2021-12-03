@@ -5,9 +5,11 @@ import './CrossChainStableCoinLP.sol';
 import './libraries/Math.sol';
 import './libraries/UQ112x112.sol';
 import './interfaces/IERC20.sol';
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 
 contract CrossChainStableCoinPool is CrossChainStableCoinLP {
-    using SafeMath  for uint;
+    using SafeMath for uint;
+    using SafeERC20Upgradeable for address;
 
     event Mint(address indexed sender, uint amount0, uint amount1, uint amount2);
     event Burn(address indexed sender, uint amount0, uint amount1, uint amount2, address indexed to);
@@ -25,14 +27,12 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
 
     uint public constant override MINIMUM_LIQUIDITY = 10**3;
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
+    uint public swapFee = 20;   // 0.2% = 20/10000
+    uint public constant PERCENTAGE = 10000;
 
     address public token0;
     address public token1;
     address public token2;
-
-    uint256 public reserve0;
-    uint256 public reserve1;
-    uint256 public reserve2;
 
     uint8 public decimals0;
     uint8 public decimals1;
@@ -47,9 +47,9 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     }
 
     function getReserves() public view override returns (uint _reserve0, uint _reserve1, uint _reserve2) {
-        _reserve0 = reserve0;
-        _reserve1 = reserve1;
-        _reserve2 = reserve2;
+        _reserve0 = address(token0).balanceOf(address(this));
+        _reserve1 = address(token1).balanceOf(address(this));
+        _reserve2 = address(token2).balanceOf(address(this));
     }
 
     function _safeTransfer(address token, address to, uint value) private {
@@ -72,43 +72,29 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         decimals2 = IERC20(token2).decimals();
     }
 
-    function _update() internal {
-        reserve0 = IERC20(token0).balanceOf(address(this));
-        reserve1 = IERC20(token1).balanceOf(address(this));
-        emit Sync(reserve0, reserve1);
-    }
+    // // this low-level function should be called from a contract which performs important safety checks
+    // function mint(address to) external override lock returns (uint liquidity) {
+    //     (uint _reserve0, uint _reserve1) = getReserves(); // gas savings
+    //     uint balance0 = IERC20(token0).balanceOf(address(this));
+    //     uint balance1 = IERC20(token1).balanceOf(address(this));
 
-    function computeLiquidityUnit(uint256 _reserve0, uint256 _reserve1) public view returns (uint256) {
-        if (decimals0 > decimals1) {
-            return _reserve0.add(_reserve1.mul(10**uint256((decimals0 - decimals1))));
-        } else {
-            return _reserve1.add(_reserve0.mul(10**uint256((decimals1 - decimals0))));
-        }
-    }
+    //     uint256 reserveLiquidityUnit = computeLiquidityUnit(_reserve0, _reserve1);
+    //     uint amount0 = balance0.sub(_reserve0);
+    //     uint amount1 = balance1.sub(_reserve1);
+    //     uint256 addedLiquidityUnit = computeLiquidityUnit(amount0, amount1);
 
-    // this low-level function should be called from a contract which performs important safety checks
-    function mint(address to) external override lock returns (uint liquidity) {
-        (uint _reserve0, uint _reserve1) = getReserves(); // gas savings
-        uint balance0 = IERC20(token0).balanceOf(address(this));
-        uint balance1 = IERC20(token1).balanceOf(address(this));
+    //     if (totalSupply > 0) {
+    //         liquidity = addedLiquidityUnit.mul(totalSupply).div(reserveLiquidityUnit);
+    //     } else {
+    //         uint8 biggerDecimals = decimals0 > decimals1? decimals0:decimals1;
+    //         liquidity = addedLiquidityUnit.mul(1e18).div(10**biggerDecimals);
+    //     }
 
-        uint256 reserveLiquidityUnit = computeLiquidityUnit(_reserve0, _reserve1);
-        uint amount0 = balance0.sub(_reserve0);
-        uint amount1 = balance1.sub(_reserve1);
-        uint256 addedLiquidityUnit = computeLiquidityUnit(amount0, amount1);
+    //     _mint(to, liquidity);
 
-        if (totalSupply > 0) {
-            liquidity = addedLiquidityUnit.mul(totalSupply).div(reserveLiquidityUnit);
-        } else {
-            uint8 biggerDecimals = decimals0 > decimals1? decimals0:decimals1;
-            liquidity = addedLiquidityUnit.mul(1e18).div(10**biggerDecimals);
-        }
-
-        _mint(to, liquidity);
-
-        _update();
-        emit Mint(msg.sender, amount0, amount1);
-    }
+    //     _update();
+    //     emit Mint(msg.sender, amount0, amount1);
+    // }
 
     // this low-level function should be called from a contract which performs important safety checks
     function burn(address to) external override lock returns (uint256 amount0, uint256 amount1) {
@@ -132,35 +118,33 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     }
 
     // this low-level function should be called from a contract which performs important safety checks
-    function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external override lock {
-        require(amount0Out > 0 || amount1Out > 0, 'DTOPeggedSwap: INSUFFICIENT_OUTPUT_AMOUNT');
-        (uint _reserve0, uint _reserve1) = getReserves(); // gas savings
-        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'DTOPeggedSwap: INSUFFICIENT_LIQUIDITY');
-
-        uint balance0;
-        uint balance1;
-        { // scope for _token{0,1}, avoids stack too deep errors
-            address _token0 = token0;
-            address _token1 = token1;
-            require(to != _token0 && to != _token1, 'DTOPeggedSwap: INVALID_TO');
-            if (amount0Out > 0) _safeTransfer(_token0, to, amount0Out); // optimistically transfer tokens
-            if (amount1Out > 0) _safeTransfer(_token1, to, amount1Out); // optimistically transfer tokens
-            balance0 = IERC20(_token0).balanceOf(address(this));
-            balance1 = IERC20(_token1).balanceOf(address(this));
-        }
-        uint amount0In = balance0 > _reserve0 - amount0Out ? balance0 - (_reserve0 - amount0Out) : 0;
-        uint amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
-        require(amount0In > 0 || amount1In > 0, 'DTOPeggedSwap: INSUFFICIENT_INPUT_AMOUNT');
-
-        { // scope for reserve{0,1}Adjusted, avoids stack too deep errors
-            uint256 swapFee = IDTOPeggedSwapFactory(factory).swapFee();
-            uint balance0Adjusted = balance0.sub(amount0In.mul(swapFee).div(1000));   //minusfee
-            uint balance1Adjusted = balance1.sub(amount1In.mul(swapFee).div(1000));   //minus fee
-            require(computeLiquidityUnit(balance0Adjusted, balance1Adjusted) >= computeLiquidityUnit(_reserve0, _reserve1), "DTOPeggedSwap: Swap Liquidity Unit");
+    function swap(uint[3] memory amountsIn, uint[3] memory amountsOut, address to) external lock {
+        uint totalIn = 0;
+        for(uint i = 0; i < amountsIn.length; i++) {
+            totalIn += amountsIn[i];
         }
 
-        _update();
-        emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, to);
+        uint totalOut = 0;
+        for(uint i = 0; i < amountsOut.length; i++) {
+            totalOut += amountsOut[i];
+        }
+
+        require(totalOut <= totalIn - totalIn * swapFee / PERCENTAGE, "insufficient amount in");
+
+        require(amountsOut[0] <= IERC20(token0).balanceOf(address(this)), "insufficient amount out 0");
+        require(amountsOut[1] <= IERC20(token1).balanceOf(address(this)), "insufficient amount out 1");
+        require(amountsOut[2] <= IERC20(token2).balanceOf(address(this)), "insufficient amount out 2");
+
+        token0.safeTransferFrom(msg.sender, address(this), amountsIn[0]);
+        token1.safeTransferFrom(msg.sender, address(this), amountsIn[1]);
+        token2.safeTransferFrom(msg.sender, address(this), amountsIn[2]);
+
+        //transfer token to recipient
+        token0.safeTransfer(to, amountsOut[0]);
+        token1.safeTransfer(to, amountsOut[1]);
+        token2.safeTransfer(to, amountsOut[2]);
+        
+        emit Swap(msg.sender, amount0In, amount1In, amount2In, amount0Out, amount1Out, amount2Out, to);
     }
 
     // force reserves to match balances
