@@ -6,11 +6,18 @@ import './libraries/Math.sol';
 import './libraries/UQ112x112.sol';
 import './interfaces/IERC20.sol';
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+<<<<<<< HEAD
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     using SafeMath for uint;
     using SafeERC20Upgradeable for IERC20Upgradeable;
+=======
+
+contract CrossChainStableCoinPool is CrossChainStableCoinLP {
+    using SafeMath for uint;
+    using SafeERC20Upgradeable for address;
+>>>>>>> 3d7e8f0b87009865a1be0f8b7a74e44f06631d9d
 
     event AddLiquidity(address indexed sender, uint amount0);
     event Burn(address indexed sender, uint amount0, uint amount1, uint amount2, address indexed to);
@@ -28,7 +35,10 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
 
     // uint public constant override MINIMUM_LIQUIDITY = 10**3;
     bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
+<<<<<<< HEAD
     uint totalPoolValue = totalSupply;
+=======
+>>>>>>> 3d7e8f0b87009865a1be0f8b7a74e44f06631d9d
     uint public swapFee = 20;   // 0.2% = 20/10000
     uint public constant PERCENTAGE = 10000;
 
@@ -52,6 +62,14 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         unlocked = 1;
     }
 
+<<<<<<< HEAD
+=======
+    function getReserves() public view override returns (uint _reserve0, uint _reserve1, uint _reserve2) {
+        _reserve0 = address(token0).balanceOf(address(this));
+        _reserve1 = address(token1).balanceOf(address(this));
+        _reserve2 = address(token2).balanceOf(address(this));
+    }
+>>>>>>> 3d7e8f0b87009865a1be0f8b7a74e44f06631d9d
 
     function _safeTransfer(address token, address to, uint value) private {
         (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR, to, value));
@@ -152,6 +170,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         emit Swap(msg.sender, amountsIn[0], amountsIn[1], amountsIn[2], amountsOut[0], amountsOut[1], amountsOut[2], to);
     }
 
+<<<<<<< HEAD
 
     function withdrawLiquidity(address _to, uint totalWithdraw, uint[3] memory amountsOut) external returns(bool) {
 
@@ -166,11 +185,24 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         uint totalOut = 0;
         for(uint i = 0; i < amountsOut.length; i++) {
             totalOut += convertedAmountsIn[i];
+=======
+    // this low-level function should be called from a contract which performs important safety checks
+    function swap(uint[3] memory amountsIn, uint[3] memory amountsOut, address to) external lock {
+        uint totalIn = 0;
+        for(uint i = 0; i < amountsIn.length; i++) {
+            totalIn += amountsIn[i];
+        }
+
+        uint totalOut = 0;
+        for(uint i = 0; i < amountsOut.length; i++) {
+            totalOut += amountsOut[i];
+>>>>>>> 3d7e8f0b87009865a1be0f8b7a74e44f06631d9d
         }
         
         //calculate the total minus LP that withdrawer have to pay
         totalMinusLP = uint(totalOut.mul(totalSupply).div(totalPoolValue));
 
+<<<<<<< HEAD
         // Make sure total withdraw is bigger than to sum of 3 token value the customer want to withdraw
         require(totalWithdraw >= totalMinusLP);
         // send token to Withdrawer
@@ -180,6 +212,25 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
 
         // burn LP after withdrawing
         _burn(msg.sender, totalWithdraw);
+=======
+        require(totalOut <= totalIn - totalIn * swapFee / PERCENTAGE, "insufficient amount in");
+
+        require(amountsOut[0] <= IERC20(token0).balanceOf(address(this)), "insufficient amount out 0");
+        require(amountsOut[1] <= IERC20(token1).balanceOf(address(this)), "insufficient amount out 1");
+        require(amountsOut[2] <= IERC20(token2).balanceOf(address(this)), "insufficient amount out 2");
+
+        token0.safeTransferFrom(msg.sender, address(this), amountsIn[0]);
+        token1.safeTransferFrom(msg.sender, address(this), amountsIn[1]);
+        token2.safeTransferFrom(msg.sender, address(this), amountsIn[2]);
+
+        //transfer token to recipient
+        token0.safeTransfer(to, amountsOut[0]);
+        token1.safeTransfer(to, amountsOut[1]);
+        token2.safeTransfer(to, amountsOut[2]);
+        
+        emit Swap(msg.sender, amount0In, amount1In, amount2In, amount0Out, amount1Out, amount2Out, to);
+    }
+>>>>>>> 3d7e8f0b87009865a1be0f8b7a74e44f06631d9d
 
     }
 
