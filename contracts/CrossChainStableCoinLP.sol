@@ -65,8 +65,10 @@ contract CrossChainStableCoinLP is DTOUpgradeableBase, ICrossChainStableCoinLP, 
         return true;
     }
 
+
+    // replace uint(-1)  to type(uint).max
     function transferFrom(address from, address to, uint value) external override returns (bool) {
-        if (allowance[from][msg.sender] != uint(-1)) {
+        if (allowance[from][msg.sender] != type(uint).max) {
             allowance[from][msg.sender] = allowance[from][msg.sender].sub(value);
         }
         _transfer(from, to, value);

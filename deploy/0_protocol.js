@@ -26,27 +26,27 @@ module.exports = async (hre) => {
     log('  - network id:          ', chainId);
     log(' ');
 
-    log('  Deploying DTO Pegged Swap Factory...');
-    const DTOPeggedSwapFactory = await ethers.getContractFactory('DTOPeggedSwapFactory');
-    const DTOPeggedSwapFactoryInstance = await DTOPeggedSwapFactory.deploy(feeToSetter)
-    const factory = await DTOPeggedSwapFactoryInstance.deployed()
-    log('  - DTOPeggedSwapFactory:         ', factory.address);
-    deployData['DTOPeggedSwapFactory'] = {
-      abi: getContractAbi('DTOPeggedSwapFactory'),
+    log('  Deploying Cross Chain Stable Coin Pool...');
+    const CrossChainStableCoinPool = await ethers.getContractFactory('CrossChainStableCoinPool');
+    const CrossChainStableCoinPoolInstance = await CrossChainStableCoinPool.deploy() // variable of constructor
+    const factory = await CrossChainStableCoinPoolInstance.deployed()
+    log('  - CrossChainStableCoinPool:         ', factory.address);
+    deployData['CrossChainStableCoinPool'] = {
+      abi: getContractAbi('CrossChainStableCoinPool'),
       address: factory.address,
       deployTransaction: factory.deployTransaction,
     }
 
-    log('  Deploying DTO Pegged Swap Router...');
-    const DTOPeggedSwapRouter = await ethers.getContractFactory('DTOPeggedSwapRouter');
-    const DTOPeggedSwapRouterInstance = await DTOPeggedSwapRouter.deploy(factory.address, WETH(chainId))
-    const router = await DTOPeggedSwapRouterInstance.deployed()
-    log('  - DTOPeggedSwapRouter:         ', router.address);
-    deployData['DTOPeggedSwapRouter'] = {
-      abi: getContractAbi('DTOPeggedSwapRouter'),
-      address: router.address,
-      deployTransaction: router.deployTransaction,
-    }
+    // log('  Deploying Cross Chain Stable Coin Pool Router...');
+    // const CrossChainStableCoinPoolRouter = await ethers.getContractFactory('CrossChainStableCoinPool');
+    // const CrossChainStableCoinPoolRouterInstance = await CrossChainStableCoinPoolRouter.deploy(factory.address, WETH(chainId))
+    // const router = await CrossChainStableCoinPoolRouterInstance.deployed()
+    // log('  - CrossChainStableCoinPoolRouter:         ', router.address);
+    // deployData['CrossChainStableCoinPoolRouter'] = {
+    //   abi: getContractAbi('CrossChainStableCoinPoolRouter'),
+    //   address: router.address,
+    //   deployTransaction: router.deployTransaction,
+    // }
 
     saveDeploymentData(chainId, deployData);
     log('\n  Contract Deployment Data saved to "deployments" directory.');

@@ -1,7 +1,6 @@
 {
   "name": "cross-chain-stablecoin-contracts",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -16,7 +15,7 @@
     "chai": "^4.3.4",
     "ethereum-waffle": "^3.3.0",
     "ethers": "^5.1.4",
-    "hardhat": "^2.3.0"
+    "hardhat": "^2.3.3"
   },
   "dependencies": {
     "@nomiclabs/hardhat-etherscan": "^2.1.2",
@@ -32,5 +31,14 @@
     "hardhat-gas-reporter": "^1.0.4",
     "sleep-promise": "^9.1.0",
     "solidity-coverage": "^0.7.16"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dotoracle/cross-chain-stablecoin-contracts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dotoracle/cross-chain-stablecoin-contracts/issues"
+  },
+  "homepage": "https://github.com/dotoracle/cross-chain-stablecoin-contracts#readme",
+  "description": ""
 }

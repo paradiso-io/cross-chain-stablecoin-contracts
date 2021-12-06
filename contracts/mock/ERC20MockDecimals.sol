@@ -13,7 +13,7 @@ contract ERC20MockDecimals is ERC20 {
         uint256 initialBalance,
         uint8 decimals
     ) payable ERC20(name, symbol) {
-        _setupDecimals(decimals);
+        //_setupDecimals(decimals);
         _mint(initialAccount, initialBalance);
     }
 

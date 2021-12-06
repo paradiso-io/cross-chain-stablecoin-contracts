@@ -48,60 +48,60 @@ module.exports = {
       blockGasLimit: 32400000,
       accounts: {mnemonic: "test test test test test test test test test test test junk"}
     },
-    kovan: {
-      url: `https://kovan.infura.io/v3/${process.env.INFURA_APIKEY}`,
-      gasPrice: 10e9,
-      blockGasLimit: 12400000,
-      accounts: [process.env.PRIVATE_KEY]
-    },
-    bsc: {
-      url: `https://bsc-dataseed.binance.org/`,
-      gasPrice: 6e9,
-      blockGasLimit: 22400000,
-      accounts: [process.env.PRIVATE_KEY]
-    },
-    bsctestnet: {
-      url: `https://data-seed-prebsc-1-s1.binance.org:8545/`,
-      gasPrice: 20e9,
-      blockGasLimit: 22400000,
-      accounts: [process.env.PRIVATE_KEY]
-    },
-    mainnet: {
-      url: `https://mainnet.infura.io/v3/${process.env.INFURA_APIKEY}`,
-      gasPrice: 130e9,
-      blockGasLimit: 12487794,
-      accounts: [process.env.PRIVATE_KEY]
-    },
-    moonbeamtestnet: {
-      url: `https://rpc.testnet.moonbeam.network/`,
-      gasPrice: 5e9,
-      blockGasLimit: 12487794,
-      accounts: [process.env.PRIVATE_KEY]
-    },
-    fantomtestnet: {
-      url: `https://rpc.testnet.fantom.network`,
-      gasPrice: 22e9,
-      blockGasLimit: 12487794,
-      accounts: [process.env.PRIVATE_KEY]
-    },
-    mumbaitestnet: {  //matic
-      url: `https://rpc-mumbai.maticvigil.com/`,
-      gasPrice: 20e9,
-      blockGasLimit: 12487794,
-      accounts: [process.env.PRIVATE_KEY]
-    },
-    fujitestnet: {  //avalanche
-      url: `https://api.avax-test.network/ext/bc/C/rpc`,
-      gasPrice: 225e9,
-      blockGasLimit: 12487794,
-      accounts: [process.env.PRIVATE_KEY]
-    },
-    tomotestnet: {
-      url: `https://rpc.testnet.tomochain.com`,
-      gasPrice: 1e9,
-      blockGasLimit: 12487794,
-      accounts: [process.env.PRIVATE_KEY]
-    },
+    // kovan: {
+    //   url: `https://kovan.infura.io/v3/${process.env.INFURA_APIKEY}`,
+    //   gasPrice: 10e9,
+    //   blockGasLimit: 12400000,
+    //   accounts: [process.env.PRIVATE_KEY]
+    // },
+    // bsc: {
+    //   url: `https://bsc-dataseed.binance.org/`,
+    //   gasPrice: 6e9,
+    //   blockGasLimit: 22400000,
+    //   accounts: [process.env.PRIVATE_KEY]
+    // },
+    // bsctestnet: {
+    //   url: `https://data-seed-prebsc-1-s1.binance.org:8545/`,
+    //   gasPrice: 20e9,
+    //   blockGasLimit: 22400000,
+    //   accounts: [process.env.PRIVATE_KEY]
+    // },
+    // mainnet: {
+    //   url: `https://mainnet.infura.io/v3/${process.env.INFURA_APIKEY}`,
+    //   gasPrice: 130e9,
+    //   blockGasLimit: 12487794,
+    //   accounts: [process.env.PRIVATE_KEY]
+    // },
+    // moonbeamtestnet: {
+    //   url: `https://rpc.testnet.moonbeam.network/`,
+    //   gasPrice: 5e9,
+    //   blockGasLimit: 12487794,
+    //   accounts: [process.env.PRIVATE_KEY]
+    // },
+    // fantomtestnet: {
+    //   url: `https://rpc.testnet.fantom.network`,
+    //   gasPrice: 22e9,
+    //   blockGasLimit: 12487794,
+    //   accounts: [process.env.PRIVATE_KEY]
+    // },
+    // mumbaitestnet: {  //matic
+    //   url: `https://rpc-mumbai.maticvigil.com/`,
+    //   gasPrice: 20e9,
+    //   blockGasLimit: 12487794,
+    //   accounts: [process.env.PRIVATE_KEY]
+    // },s
+    // fujitestnet: {  //avalanche
+    //   url: `https://api.avax-test.network/ext/bc/C/rpc`,
+    //   gasPrice: 225e9,
+    //   blockGasLimit: 12487794,
+    //   accounts: [process.env.PRIVATE_KEY]
+    // },
+    // tomotestnet: {
+    //   url: `https://rpc.testnet.tomochain.com`,
+    //   gasPrice: 1e9,
+    //   blockGasLimit: 12487794,
+    //   accounts: [process.env.PRIVATE_KEY]
+    // },
   },
   solidity: {
     version: "0.8.3",
