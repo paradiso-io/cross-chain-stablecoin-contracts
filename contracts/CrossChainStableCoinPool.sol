@@ -60,12 +60,6 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         unlocked = 1;
     }
 
-    // function getReserves() public view override returns (uint _reserve0, uint _reserve1, uint _reserve2) {
-    //     _reserve0 = address(token0).balanceOf(address(this));
-    //     _reserve1 = address(token1).balanceOf(address(this));
-    //     _reserve2 = address(token2).balanceOf(address(this));
-    // }
-
     function _safeTransfer(
         address token,
         address to,
@@ -120,6 +114,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         return totalPoolValue;
     }
 
+// ADDLIQUIDITY FUNCTION
     function addLiquidity(address _to, uint256[3] memory amountsIn)
         external
         returns (bool)
@@ -163,6 +158,8 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         emit AddLiquidity(msg.sender, totalReceivedLP);
     }
 
+
+// SWAP FUNCTION
     // this low-level function should be called from a contract which performs important safety checks
     function swap(
         uint256[3] memory amountsIn,
@@ -258,7 +255,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
             to
         );
     }
-
+// WITHDRAW LIQUIDITY FUNCTION
     function withdrawLiquidity(
         address _to,
         uint256 totalWithdraw,
