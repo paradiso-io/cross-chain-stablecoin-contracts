@@ -7,12 +7,37 @@ const BigNumber = ethers.BigNumber
 describe('Cross chain test', async function () {
     const [owner, ,user1, user2, user3, user4, user5, user6,user7,user8,user9,user10,user11,user12,user13] = await ethers.getSigners()
     provider = ethers.provider;
-    let erc20Mock,crossChainStableCoinPool,dto;
+    let crosschainstablecoinlp,crosschainstablecoinpool,chaindholding, tusdt, tbusd, tdai;
     beforeEach(async () => {
-      const CrossChainStableCoinPool = await ethers.getContractFactory("CrossChainStableCoinPool")
-      let CrossChainStableCoinPoolInstance = await CrossChainStableCoinPool.deploy()
-      crossChainStableCoinPool = await CrossChainStableCoinPoolInstance.deployed()
-        //dto token
+      // const CrossChainStableCoinPool = await ethers.getContractFactory("CrossChainStableCoinPool")
+      // let CrossChainStableCoinPoolInstance = await CrossChainStableCoinPool.deploy()
+      // crossChainStableCoinPool = await CrossChainStableCoinPoolInstance.deployed()
+      
+
+      //grab some mock token
+      let tUSDT = await ethers.getContractFactory("ERC20Mock")
+      let tUSDTInstance = await tUSDT.deploy("tUSDT","ttUSDT",owner.address,20000000000)
+      tusdt = await tUSDTInstance.deployed()
+
+      let tBUSD = await ethers.getContractFactory("ERC20Mock")
+      let tBUSDInstance = await tBUSD.deploy("tBUSD","ttBUSD",owner.address,20000000000)
+      tbusd = await tBUSDInstance.deployed()
+
+      let tDAI = await ethers.getContractFactory("ERC20Mock")
+      let tDAIInstance = await tDAI.deploy("tDAI","ttDAI",owner.address,20000000000)
+      tdai = await tDAIInstance.deployed()
+
+      // upgradable contract deploying
+      // address USDT: 0xdAC17F958D2ee523a2206206994597C13D831ec7
+      // address BUSD: 0x4Fabb145d64652a948d72533023f6E7A623C7C53
+      // address DAI : 0x6B175474E89094C44Da98b954EedeAC495271d0F
+      // const ChainIdHolding = await ethers.getContractAt("ChainIdHolding");
+      // chaindholding = await upgrades.deployProxy(ChainIdHolding, [], { unsafeAllow: ['delegatecall'], kind: 'uups' }) //unsafeAllowCustomTypes: true,
+      // const CrossChainStableCoinLP = await ethers.getContractFactory("CrossChainStableCoinLP");
+      // crosschainstablecoinlp = await upgrades.deployProxy(CrossChainStableCoinLP, [], { unsafeAllow: ['delegatecall'], kind: 'uups' }) //unsafeAllowCustomTypes: true,
+      const CrossChainStableCoinPool = await ethers.getContractFactory("CrossChainStableCoinPool");
+      crosschainstablecoinpool = await upgrades.deployProxy(CrossChainStableCoinPool, [tusdt.address, tbusd.address, tdai.address], { unsafeAllow: ['delegatecall'], kind: 'uups' }) //unsafeAllowCustomTypes: true,
+
     //     let DTO = await ethers.getContractFactory("DTO")
     //     let DTOInstance  = await DTO.deploy()
     //     dto = await DTOInstance.deployed()

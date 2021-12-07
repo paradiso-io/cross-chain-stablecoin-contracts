@@ -1,46 +1,44 @@
 pragma solidity >=0.5.16;
 
-import './interfaces/ICrossChainStableCoinLP.sol';
-import './CrossChainStableCoinLP.sol';
-import './libraries/Math.sol';
-import './libraries/UQ112x112.sol';
-import './interfaces/IERC20.sol';
+import "./interfaces/ICrossChainStableCoinLP.sol";
+import "./CrossChainStableCoinLP.sol";
+import "./libraries/Math.sol";
+import "./libraries/UQ112x112.sol";
+import "./interfaces/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-<<<<<<< HEAD
+
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 contract CrossChainStableCoinPool is CrossChainStableCoinLP {
-    using SafeMath for uint;
+    using SafeMath for uint256;
     using SafeERC20Upgradeable for IERC20Upgradeable;
-=======
 
-contract CrossChainStableCoinPool is CrossChainStableCoinLP {
-    using SafeMath for uint;
-    using SafeERC20Upgradeable for address;
->>>>>>> 3d7e8f0b87009865a1be0f8b7a74e44f06631d9d
-
-    event AddLiquidity(address indexed sender, uint amount0);
-    event Burn(address indexed sender, uint amount0, uint amount1, uint amount2, address indexed to);
-    event Swap(
+    event AddLiquidity(address indexed sender, uint256 amount0);
+    event Burn(
         address indexed sender,
-        uint amount0In,
-        uint amount1In,
-        uint amount2In,
-        uint amount0Out,
-        uint amount1Out,
-        uint amount2Out,
+        uint256 amount0,
+        uint256 amount1,
+        uint256 amount2,
         address indexed to
     );
-    event Sync(uint reserve0, uint reserve1, uint reserve2);
+    event Swap(
+        address indexed sender,
+        uint256 amount0In,
+        uint256 amount1In,
+        uint256 amount2In,
+        uint256 amount0Out,
+        uint256 amount1Out,
+        uint256 amount2Out,
+        address indexed to
+    );
+    event Sync(uint256 reserve0, uint256 reserve1, uint256 reserve2);
 
     // uint public constant override MINIMUM_LIQUIDITY = 10**3;
-    bytes4 private constant SELECTOR = bytes4(keccak256(bytes('transfer(address,uint256)')));
-<<<<<<< HEAD
-    uint totalPoolValue = totalSupply;
-=======
->>>>>>> 3d7e8f0b87009865a1be0f8b7a74e44f06631d9d
-    uint public swapFee = 20;   // 0.2% = 20/10000
-    uint public constant PERCENTAGE = 10000;
+    bytes4 private constant SELECTOR =
+        bytes4(keccak256(bytes("transfer(address,uint256)")));
+    uint256 totalPoolValue;
+    uint256 public swapFee; // 0.2% = 20/10000
+    uint256 public constant PERCENTAGE = 10000;
 
     address public token0;
     address public token1;
@@ -50,35 +48,48 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     uint8 public decimals1;
     uint8 public decimals2;
 
-    // Because decimals may be different from one to the other, so we need convert all to 18 decimals token. 
-    uint[3] convertedAmountsIn;
-    uint[3] convertedAmountsOut;
+    // Because decimals may be different from one to the other, so we need convert all to 18 decimals token.
+    uint256[3] convertedAmountsIn;
+    uint256[3] convertedAmountsOut;
 
-    uint private unlocked = 1;
+    uint256 private unlocked;
     modifier lock() {
-        require(unlocked == 1, 'CrossChainStableCoinPool: LOCKED');
+        require(unlocked == 1, "CrossChainStableCoinPool: LOCKED");
         unlocked = 0;
         _;
         unlocked = 1;
     }
 
-<<<<<<< HEAD
-=======
-    function getReserves() public view override returns (uint _reserve0, uint _reserve1, uint _reserve2) {
-        _reserve0 = address(token0).balanceOf(address(this));
-        _reserve1 = address(token1).balanceOf(address(this));
-        _reserve2 = address(token2).balanceOf(address(this));
-    }
->>>>>>> 3d7e8f0b87009865a1be0f8b7a74e44f06631d9d
+    // function getReserves() public view override returns (uint _reserve0, uint _reserve1, uint _reserve2) {
+    //     _reserve0 = address(token0).balanceOf(address(this));
+    //     _reserve1 = address(token1).balanceOf(address(this));
+    //     _reserve2 = address(token2).balanceOf(address(this));
+    // }
 
-    function _safeTransfer(address token, address to, uint value) private {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(SELECTOR, to, value));
-        require(success && (data.length == 0 || abi.decode(data, (bool))), 'CrossChainStableCoinPool: TRANSFER_FAILED');
+    function _safeTransfer(
+        address token,
+        address to,
+        uint256 value
+    ) private {
+        (bool success, bytes memory data) = token.call(
+            abi.encodeWithSelector(SELECTOR, to, value)
+        );
+        require(
+            success && (data.length == 0 || abi.decode(data, (bool))),
+            "CrossChainStableCoinPool: TRANSFER_FAILED"
+        );
     }
 
     // called once by the factory at time of deployment
-    function initialize(address _token0, address _token1, address _token2) external initializer {
+    function initialize(
+        address _token0,
+        address _token1,
+        address _token2
+    ) external initializer {
         __DTOUpgradeableBase_initialize();
+        __CrossChainStableCoinLP_initialize();
+        swapFee = 20;
+        unlocked = 1;
         token0 = _token0;
         token1 = _token1;
         token2 = _token2;
@@ -87,29 +98,62 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         decimals2 = IERC20(token2).decimals();
     }
 
-    function convertTo18Decimals(address _token , uint amount) public returns(uint) {
-        return(amount.mul((10**(18 - IERC20(_token).decimals()))));
+    function convertTo18Decimals(address _token, uint256 amount)
+        public
+        view
+        returns (uint256)
+    {
+        return (amount.mul((10**(18 - IERC20(_token).decimals()))));
     }
 
-    function addLiquidity(address _to, uint[3] memory amountsIn) external returns(bool) {
+    function calculatePoolValue() public returns (uint256) {
+        totalPoolValue =
+            IERC20(token0).balanceOf(address(this)).mul(
+                (10**(18 - IERC20(token0).decimals()))
+            ) +
+            IERC20(token1).balanceOf(address(this)).mul(
+                (10**(18 - IERC20(token1).decimals()))
+            ) +
+            IERC20(token2).balanceOf(address(this)).mul(
+                (10**(18 - IERC20(token2).decimals()))
+            );
+        return totalPoolValue;
+    }
 
-        uint totalReceivedLP = 0;
+    function addLiquidity(address _to, uint256[3] memory amountsIn)
+        external
+        returns (bool)
+    {
+        uint256 totalReceivedLP = 0;
 
-        // Calculate the input amount to 18 decimals token 
-        convertedAmountsIn[0]= convertTo18Decimals(token0, amountsIn[0]);
-        convertedAmountsIn[1]= convertTo18Decimals(token1, amountsIn[1]);
-        convertedAmountsIn[2]= convertTo18Decimals(token2, amountsIn[2]);
-        
-        IERC20Upgradeable(token0).safeTransferFrom(msg.sender, address(this), amountsIn[0]);
-        IERC20Upgradeable(token1).safeTransferFrom(msg.sender, address(this), amountsIn[1]);
-        IERC20Upgradeable(token2).safeTransferFrom(msg.sender, address(this), amountsIn[2]);
+        // Calculate the input amount to 18 decimals token
+        convertedAmountsIn[0] = convertTo18Decimals(token0, amountsIn[0]);
+        convertedAmountsIn[1] = convertTo18Decimals(token1, amountsIn[1]);
+        convertedAmountsIn[2] = convertTo18Decimals(token2, amountsIn[2]);
+
+        IERC20Upgradeable(token0).safeTransferFrom(
+            msg.sender,
+            address(this),
+            amountsIn[0]
+        );
+        IERC20Upgradeable(token1).safeTransferFrom(
+            msg.sender,
+            address(this),
+            amountsIn[1]
+        );
+        IERC20Upgradeable(token2).safeTransferFrom(
+            msg.sender,
+            address(this),
+            amountsIn[2]
+        );
 
         // calculate total amount input
-        uint totalAddIn = 0;
-        for(uint i = 0; i < amountsIn.length; i++) {
+        uint256 totalAddIn = 0;
+        for (uint256 i = 0; i < amountsIn.length; i++) {
             totalAddIn += convertedAmountsIn[i];
         }
 
+        calculatePoolValue();
         //calculate the total received LP that provider can received
         totalReceivedLP = totalAddIn.mul(totalSupply).div(totalPoolValue);
 
@@ -117,92 +161,126 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         _mint(_to, totalReceivedLP);
 
         emit AddLiquidity(msg.sender, totalReceivedLP);
-
     }
 
     // this low-level function should be called from a contract which performs important safety checks
-    function swap(uint[3] memory amountsIn, uint[3] memory amountsOut, address to) external lock {
-
+    function swap(
+        uint256[3] memory amountsIn,
+        uint256[3] memory amountsOut,
+        address to
+    ) external lock {
         // make sure we have enough amount in the pool for withdrawing
-        require(amountsOut[0] <= IERC20(token0).balanceOf(address(this)), "insufficient amount out 0");
-        require(amountsOut[1] <= IERC20(token1).balanceOf(address(this)), "insufficient amount out 1");
-        require(amountsOut[2] <= IERC20(token2).balanceOf(address(this)), "insufficient amount out 2");
-        
-        // Convert the input amount to 18 decimals token 
-        convertedAmountsIn[0]= amountsIn[0].mul(10**(18-decimals0));
-        convertedAmountsIn[1]= amountsIn[1].mul(10**(18-decimals1));
-        convertedAmountsIn[2]= amountsIn[2].mul(10**(18-decimals2));
+        require(
+            amountsOut[0] <= IERC20(token0).balanceOf(address(this)),
+            "insufficient amount out 0"
+        );
+        require(
+            amountsOut[1] <= IERC20(token1).balanceOf(address(this)),
+            "insufficient amount out 1"
+        );
+        require(
+            amountsOut[2] <= IERC20(token2).balanceOf(address(this)),
+            "insufficient amount out 2"
+        );
+
+        // Convert the input amount to 18 decimals token
+        convertedAmountsIn[0] = amountsIn[0].mul(10**(18 - decimals0));
+        convertedAmountsIn[1] = amountsIn[1].mul(10**(18 - decimals1));
+        convertedAmountsIn[2] = amountsIn[2].mul(10**(18 - decimals2));
 
         // calculate total amount input
-        uint totalIn = 0;
-        for(uint i = 0; i < amountsIn.length; i++) {
+        uint256 totalIn = 0;
+        for (uint256 i = 0; i < amountsIn.length; i++) {
             totalIn += convertedAmountsIn[i];
         }
 
-        // Convert the out amount to 18 decimals token 
-        convertedAmountsOut[0]= convertTo18Decimals(token0, amountsOut[0]);
-        convertedAmountsOut[1]= convertTo18Decimals(token1, amountsOut[1]);
-        convertedAmountsOut[2]= convertTo18Decimals(token2, amountsOut[2]);
+        // Convert the out amount to 18 decimals token
+        convertedAmountsOut[0] = convertTo18Decimals(token0, amountsOut[0]);
+        convertedAmountsOut[1] = convertTo18Decimals(token1, amountsOut[1]);
+        convertedAmountsOut[2] = convertTo18Decimals(token2, amountsOut[2]);
 
         // calculate total amount output
-        uint totalOut = 0;
-        for(uint i = 0; i < amountsOut.length; i++) {
+        uint256 totalOut = 0;
+        for (uint256 i = 0; i < amountsOut.length; i++) {
             totalOut += convertedAmountsOut[i];
         }
 
         // Make sure that Output is smaller than Input minus the swapfee
-        require(totalOut <= totalIn - totalIn * swapFee / PERCENTAGE, "insufficient amount in");
+        require(
+            totalOut <= totalIn - (totalIn * swapFee) / PERCENTAGE,
+            "insufficient amount in"
+        );
 
-
-        IERC20Upgradeable(token0).safeTransferFrom(msg.sender, address(this), amountsIn[0]);
-        IERC20Upgradeable(token1).safeTransferFrom(msg.sender, address(this), amountsIn[1]);
-        IERC20Upgradeable(token2).safeTransferFrom(msg.sender, address(this), amountsIn[2]);
+        IERC20Upgradeable(token0).safeTransferFrom(
+            msg.sender,
+            address(this),
+            amountsIn[0]
+        );
+        IERC20Upgradeable(token1).safeTransferFrom(
+            msg.sender,
+            address(this),
+            amountsIn[1]
+        );
+        IERC20Upgradeable(token2).safeTransferFrom(
+            msg.sender,
+            address(this),
+            amountsIn[2]
+        );
 
         //transfer token to recipient
-        // confirm with Cam
-        IERC20Upgradeable(token0).safeTransferFrom(address(this), to, amountsOut[0]);
-        IERC20Upgradeable(token1).safeTransferFrom(address(this), to, amountsOut[1]);
-        IERC20Upgradeable(token2).safeTransferFrom(address(this), to, amountsOut[2]);
+        IERC20Upgradeable(token0).safeTransferFrom(
+            address(this),
+            to,
+            amountsOut[0]
+        );
+        IERC20Upgradeable(token1).safeTransferFrom(
+            address(this),
+            to,
+            amountsOut[1]
+        );
+        IERC20Upgradeable(token2).safeTransferFrom(
+            address(this),
+            to,
+            amountsOut[2]
+        );
 
         // add swapfee to totalPoolValue
-        totalPoolValue = totalPoolValue + totalIn * swapFee / PERCENTAGE;
-        
-        emit Swap(msg.sender, amountsIn[0], amountsIn[1], amountsIn[2], amountsOut[0], amountsOut[1], amountsOut[2], to);
+        totalPoolValue = totalPoolValue + (totalIn * swapFee) / PERCENTAGE;
+
+        emit Swap(
+            msg.sender,
+            amountsIn[0],
+            amountsIn[1],
+            amountsIn[2],
+            amountsOut[0],
+            amountsOut[1],
+            amountsOut[2],
+            to
+        );
     }
 
-<<<<<<< HEAD
+    function withdrawLiquidity(
+        address _to,
+        uint256 totalWithdraw,
+        uint256[3] memory amountsOut
+    ) external returns (bool) {
+        uint256 totalMinusLP = 0;
 
-    function withdrawLiquidity(address _to, uint totalWithdraw, uint[3] memory amountsOut) external returns(bool) {
-
-        uint totalMinusLP = 0;
-
-        // Calculate the withdraw amount to 18 decimals token 
-        convertedAmountsOut[0]= convertTo18Decimals(token0, amountsOut[0]);
-        convertedAmountsOut[1]= convertTo18Decimals(token1, amountsOut[1]);
-        convertedAmountsOut[2]= convertTo18Decimals(token2, amountsOut[2]);
+        // Calculate the withdraw amount to 18 decimals token
+        convertedAmountsOut[0] = convertTo18Decimals(token0, amountsOut[0]);
+        convertedAmountsOut[1] = convertTo18Decimals(token1, amountsOut[1]);
+        convertedAmountsOut[2] = convertTo18Decimals(token2, amountsOut[2]);
 
         // calculate total amount output
-        uint totalOut = 0;
-        for(uint i = 0; i < amountsOut.length; i++) {
+        uint256 totalOut = 0;
+        for (uint256 i = 0; i < amountsOut.length; i++) {
             totalOut += convertedAmountsIn[i];
-=======
-    // this low-level function should be called from a contract which performs important safety checks
-    function swap(uint[3] memory amountsIn, uint[3] memory amountsOut, address to) external lock {
-        uint totalIn = 0;
-        for(uint i = 0; i < amountsIn.length; i++) {
-            totalIn += amountsIn[i];
         }
 
-        uint totalOut = 0;
-        for(uint i = 0; i < amountsOut.length; i++) {
-            totalOut += amountsOut[i];
->>>>>>> 3d7e8f0b87009865a1be0f8b7a74e44f06631d9d
-        }
-        
+        calculatePoolValue();
         //calculate the total minus LP that withdrawer have to pay
-        totalMinusLP = uint(totalOut.mul(totalSupply).div(totalPoolValue));
+        totalMinusLP = uint256(totalOut.mul(totalSupply).div(totalPoolValue));
 
-<<<<<<< HEAD
         // Make sure total withdraw is bigger than to sum of 3 token value the customer want to withdraw
         require(totalWithdraw >= totalMinusLP);
         // send token to Withdrawer
@@ -212,26 +290,5 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
 
         // burn LP after withdrawing
         _burn(msg.sender, totalWithdraw);
-=======
-        require(totalOut <= totalIn - totalIn * swapFee / PERCENTAGE, "insufficient amount in");
-
-        require(amountsOut[0] <= IERC20(token0).balanceOf(address(this)), "insufficient amount out 0");
-        require(amountsOut[1] <= IERC20(token1).balanceOf(address(this)), "insufficient amount out 1");
-        require(amountsOut[2] <= IERC20(token2).balanceOf(address(this)), "insufficient amount out 2");
-
-        token0.safeTransferFrom(msg.sender, address(this), amountsIn[0]);
-        token1.safeTransferFrom(msg.sender, address(this), amountsIn[1]);
-        token2.safeTransferFrom(msg.sender, address(this), amountsIn[2]);
-
-        //transfer token to recipient
-        token0.safeTransfer(to, amountsOut[0]);
-        token1.safeTransfer(to, amountsOut[1]);
-        token2.safeTransfer(to, amountsOut[2]);
-        
-        emit Swap(msg.sender, amount0In, amount1In, amount2In, amount0Out, amount1Out, amount2Out, to);
     }
->>>>>>> 3d7e8f0b87009865a1be0f8b7a74e44f06631d9d
-
-    }
-
 }

@@ -4,6 +4,9 @@ import './interfaces/ICrossChainStableCoinLP.sol';
 import './libraries/SafeMath.sol';
 import './libraries/DTOUpgradeableBase.sol';
 import './ChainIdHolding.sol';
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
 contract CrossChainStableCoinLP is DTOUpgradeableBase, ICrossChainStableCoinLP, ChainIdHolding {
     using SafeMath for uint;
@@ -20,8 +23,9 @@ contract CrossChainStableCoinLP is DTOUpgradeableBase, ICrossChainStableCoinLP, 
     bytes32 public constant override PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     mapping(address => uint) public override nonces;
 
-    constructor() public {
-        DOMAIN_SEPARATOR = keccak256(
+    function __CrossChainStableCoinLP_initialize()  internal {
+        __ChainIdHolding_initialize();
+         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
                 keccak256(bytes(name)),
