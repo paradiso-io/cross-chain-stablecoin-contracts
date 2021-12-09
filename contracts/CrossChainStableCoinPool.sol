@@ -115,9 +115,9 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     }
 
 // ADDLIQUIDITY FUNCTION
-    function addLiquidity(address _to, uint256[3] memory amountsIn)
+    function addLiquidity(address _from, uint256[3] memory amountsIn)
         external
-        returns (bool)
+        returns (uint256)
     {
         uint256 totalReceivedLP = 0;
 
@@ -125,7 +125,20 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         convertedAmountsIn[0] = convertTo18Decimals(token0, amountsIn[0]);
         convertedAmountsIn[1] = convertTo18Decimals(token1, amountsIn[1]);
         convertedAmountsIn[2] = convertTo18Decimals(token2, amountsIn[2]);
+        // calculate total amount input
+        uint256 totalAddIn = 0;
+        for (uint256 i = 0; i < amountsIn.length; i++) {
+            totalAddIn += convertedAmountsIn[i];
+        }
 
+        calculatePoolValue();
+        //calculate the total received LP that provider can received
+        if (totalSupply == 0) {
+            totalReceivedLP = totalAddIn;
+        } else {
+            totalReceivedLP = totalAddIn.mul(totalSupply).div(totalPoolValue);
+        }
+        
         IERC20Upgradeable(token0).safeTransferFrom(
             msg.sender,
             address(this),
@@ -141,21 +154,10 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
             address(this),
             amountsIn[2]
         );
-
-        // calculate total amount input
-        uint256 totalAddIn = 0;
-        for (uint256 i = 0; i < amountsIn.length; i++) {
-            totalAddIn += convertedAmountsIn[i];
-        }
-
-        calculatePoolValue();
-        //calculate the total received LP that provider can received
-        totalReceivedLP = totalAddIn.mul(totalSupply).div(totalPoolValue);
-
         // send LP token to provider
-        _mint(_to, totalReceivedLP);
-
+        _mint(_from, totalReceivedLP);
         emit AddLiquidity(msg.sender, totalReceivedLP);
+        return totalReceivedLP;
     }
 
 
@@ -225,24 +227,21 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         );
 
         //transfer token to recipient
-        IERC20Upgradeable(token0).safeTransferFrom(
-            address(this),
+        IERC20Upgradeable(token0).safeTransfer(
             to,
             amountsOut[0]
         );
-        IERC20Upgradeable(token1).safeTransferFrom(
-            address(this),
+        IERC20Upgradeable(token1).safeTransfer(
             to,
             amountsOut[1]
         );
-        IERC20Upgradeable(token2).safeTransferFrom(
-            address(this),
+        IERC20Upgradeable(token2).safeTransfer(
             to,
             amountsOut[2]
         );
 
         // add swapfee to totalPoolValue
-        totalPoolValue = totalPoolValue + (totalIn * swapFee) / PERCENTAGE;
+        // totalPoolValue = totalPoolValue + (totalIn * swapFee) / PERCENTAGE;
 
         emit Swap(
             msg.sender,
@@ -261,7 +260,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         uint256 totalWithdraw,
         uint256[3] memory amountsOut
     ) external returns (bool) {
-        uint256 totalMinusLP = 0;
+        uint256 totalMinusLP ;
 
         // Calculate the withdraw amount to 18 decimals token
         convertedAmountsOut[0] = convertTo18Decimals(token0, amountsOut[0]);
@@ -271,12 +270,12 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         // calculate total amount output
         uint256 totalOut = 0;
         for (uint256 i = 0; i < amountsOut.length; i++) {
-            totalOut += convertedAmountsIn[i];
+            totalOut += convertedAmountsOut[i];
         }
 
         calculatePoolValue();
         //calculate the total minus LP that withdrawer have to pay
-        totalMinusLP = uint256(totalOut.mul(totalSupply).div(totalPoolValue));
+        totalMinusLP = totalOut.mul(totalSupply).div(totalPoolValue);
 
         // Make sure total withdraw is bigger than to sum of 3 token value the customer want to withdraw
         require(totalWithdraw >= totalMinusLP);
@@ -286,6 +285,6 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         IERC20Upgradeable(token2).safeTransfer(_to, amountsOut[2]);
 
         // burn LP after withdrawing
-        _burn(msg.sender, totalWithdraw);
+        _burn(msg.sender, totalMinusLP);
     }
 }

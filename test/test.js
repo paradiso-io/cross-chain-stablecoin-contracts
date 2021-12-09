@@ -7,165 +7,143 @@ const BigNumber = ethers.BigNumber
 describe('Cross chain test', async function () {
   const [owner, , user1, user2, user3, user4, user5, user6, user7, user8, user9, user10, user11, user12, user13] = await ethers.getSigners()
   provider = ethers.provider;
-  let crosschainstablecoinlp, crosschainstablecoinpool, chaindholding, tusdt, tbusd, tdai;
+  let balanceOfLP, crosschainstablecoinlp, crosschainstablecoinpool, chaindholding, tusdt, tbusd, tdai, poolValue;
+
+
+
   beforeEach(async () => {
-    // const CrossChainStableCoinPool = await ethers.getContractFactory("CrossChainStableCoinPool")
-    // let CrossChainStableCoinPoolInstance = await CrossChainStableCoinPool.deploy()
-    // crossChainStableCoinPool = await CrossChainStableCoinPoolInstance.deployed()
-
-
-    //grab some mock token
     let tUSDT = await ethers.getContractFactory("ERC20Mock")
-    let tUSDTInstance = await tUSDT.deploy("tUSDT", "ttUSDT", owner.address, 20000000000) // 20 bil
+    let tUSDTInstance = await tUSDT.deploy("tUSDT", "ttUSDT", user1.address, ethers.utils.parseEther('20000000000')) // 20 bil
     tusdt = await tUSDTInstance.deployed()
     console.log("Your tUSDT address: " + tusdt.address);
+    console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
 
     let tBUSD = await ethers.getContractFactory("ERC20Mock")
-    let tBUSDInstance = await tBUSD.deploy("tBUSD", "ttBUSD", owner.address, 20000000000) // 20 bil 
+    let tBUSDInstance = await tBUSD.deploy("tBUSD", "ttBUSD", user1.address, ethers.utils.parseEther('20000000000')) // 20 bil 
     tbusd = await tBUSDInstance.deployed()
     console.log("Your tBUSD address: " + tbusd.address);
 
     let tDAI = await ethers.getContractFactory("ERC20Mock")
-    let tDAIInstance = await tDAI.deploy("tDAI", "ttDAI", owner.address, 20000000000)  // 20 bil
+    let tDAIInstance = await tDAI.deploy("tDAI", "ttDAI", user1.address, ethers.utils.parseEther('20000000000'))  // 20 bil
     tdai = await tDAIInstance.deployed()
     console.log("Your tDAI address: " + tdai.address);
 
     const CrossChainStableCoinPool = await ethers.getContractFactory("CrossChainStableCoinPool");
     crosschainstablecoinpool = await upgrades.deployProxy(CrossChainStableCoinPool, [tusdt.address, tbusd.address, tdai.address], { unsafeAllow: ['delegatecall'], kind: 'uups' }) //unsafeAllowCustomTypes: true,
 
-    //     let DTO = await ethers.getContractFactory("DTO")
-    //     let DTOInstance  = await DTO.deploy()
-    //     dto = await DTOInstance.deployed()
-    //   //grab some mock token
-    //   let ERC20Mock = await ethers.getContractFactory("ERC20Mock")
-    //   let ERC20MockInstance = await ERC20Mock.deploy("test","tes",owner.address,20000000000)
-    //   erc20Mock = await ERC20MockInstance.deployed()
-
-    //   const DtoStaking = await ethers.getContractFactory('DTOStaking')
-    //   dtoStaking = await upgrades.deployProxy(DtoStaking, [erc20Mock.address, dto.address, stakingTokenLock.address,0,0,7*86400,3*86400], { unsafeAllow: ['delegatecall'], kind: 'uups' }) //unsafeAllowCustomTypes: true,
-    //   expect(await dtoStaking.balanceOf(dtoStaking.address)).to.be.equal(ethers.utils.parseEther('0'))
-    //   await stakingTokenLock.initialize(dtoStaking.address)
+    balanceOfLP = (await crosschainstablecoinpool.balanceOf(crosschainstablecoinpool.address)).toString();
 
   })
 
-  it("StableCoin", async function () {
-        //await crosschainstablecoinpool.safeTransfer(user1.address,100000);
-        console.log("Owner address: " + owner.address);
-        console.log("user1 address: " + user1.address);
-        //console.log("Transfer from owner to user1: " + tdai.address);
-    //    await dto.connect(user1).approve(dtoStaking.address,100000);
-    //    await dtoStaking.connect(user1).stake(5000);
-    //    expect(await dtoStaking.totalSupply()).to.be.equal(5000)
-    //    expect(await dtoStaking.balanceOf(user1.address)).to.be.equal(5000)
-    //    expect(await dto.balanceOf(dtoStaking.address)).to.be.equal(5000);
+  it("AddLiquidity Test", async function () {
+
+    //await crosschainstablecoinpool.add(user1.address,100000);
+    poolValue = await crosschainstablecoinpool.calculatePoolValue();
+    
+    console.log("pool  balance: " + balanceOfLP);
+    console.log("Owner address: " + owner.address);
+    console.log("user1 address: " + user1.address);
+
+    console.log("Add Liquidity Test: " + balanceOfLP);
+
+    await tusdt.connect(user1).approve(crosschainstablecoinpool.address, ethers.utils.parseEther('10000'))
+    await tbusd.connect(user1).approve(crosschainstablecoinpool.address, ethers.utils.parseEther('10000'))
+    await tdai.connect(user1).approve(crosschainstablecoinpool.address, ethers.utils.parseEther('10000'))
+    
+    
+    await crosschainstablecoinpool.connect(user1).addLiquidity(user1.address, [ethers.utils.parseEther('5'), ethers.utils.parseEther('6'), ethers.utils.parseEther('4')])
+    console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
+    console.log("Total received LP user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
+    console.log("LP balance user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
+
+
+    await crosschainstablecoinpool.connect(user1).addLiquidity(user1.address, [ethers.utils.parseEther('8'), ethers.utils.parseEther('2'), ethers.utils.parseEther('0')])
+    console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
+    console.log("Total received LP user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
+    console.log("LP balance user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
+    console.log (poolValue.toString());
+
 
   })
-  // it("withdraw" , async function (){
-  //     await dto.connect(owner).transfer(user1.address,5000);
-  //     await dto.connect(user1).approve(dtoStaking.address,5000);
-  //     await dtoStaking.connect(user1).stake(5000);
-  //     await expect(
-  //         dtoStaking.connect(user1).withdraw(0)
-  //       ).to.be.revertedWith("Cannot withdraw 0");
-  //     await dtoStaking.connect(user1).withdraw(5000) ;
-  //     expect(await dtoStaking.totalSupply()).to.be.equal(0);
-  //     expect(await dtoStaking.balanceOf(user1.address)).to.be.equal(0)
-  //     expect(await dto.balanceOf(dtoStaking.address)).to.be.equal(0);
 
-  //     expect(await dto.balanceOf(stakingTokenLock.address)).to.be.equal(5000);
 
-  //     await ethers.provider.send('evm_increaseTime', [2 *86400]); // 2 days
-  //     await expect(
-  //         dtoStaking.connect(user1).getUnlock(user1.address,0)
-  //       ).to.be.revertedWith("Already withdrawn or not unlockable yet");
 
-  //    await ethers.provider.send('evm_increaseTime', [1 *86400]); // 1 days
-  //    await  dtoStaking.connect(user1).getUnlock(user1.address,0)
-  //    expect(await dto.balanceOf(user1.address)).to.be.equal(5000)
-  // })
+  it("SWAP Test", async function () {
 
-  // it("notifyRewardAmount", async function (){
-  //     await dto.connect(owner).transfer(user1.address,5000);
-  //     await dto.connect(owner).transfer(user2.address,10000);
+    await tusdt.connect(user1).approve(crosschainstablecoinpool.address, ethers.utils.parseEther('10000'))
+    await tbusd.connect(user1).approve(crosschainstablecoinpool.address, ethers.utils.parseEther('10000'))
+    await tdai.connect(user1).approve(crosschainstablecoinpool.address, ethers.utils.parseEther('10000'))
 
-  //     await erc20Mock.connect(owner).transfer(dtoStaking.address,1000000000)
-  //     await dto.connect(user1).approve(dtoStaking.address,5000);
-  //     await dtoStaking.connect(user1).stake(5000);
-  //     await dto.connect(user2).approve(dtoStaking.address,10000);
-  //     await dtoStaking.connect(user2).stake(10000);
+    await crosschainstablecoinpool.connect(user1).addLiquidity(user1.address, [ethers.utils.parseEther('100'), ethers.utils.parseEther('200'), ethers.utils.parseEther('300')])
+    console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
+    console.log("Total received LP user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
+    console.log("LP balance user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
 
-  //     await dtoStaking.notifyRewardAmount(1000000000);
+    
+    console.log("pool  balance: " + balanceOfLP);
+    console.log("Owner address: " + owner.address);
+    console.log("user1 address: " + user1.address);
 
-  //     expect( await erc20Mock.balanceOf(user1.address)).to.be.equal(0);
-  //     expect( await erc20Mock.balanceOf(dtoStaking.address)).to.be.equal(1000000000);
+    console.log("====== SWAP Test =======: " + balanceOfLP);
 
-  //     await ethers.provider.send('evm_increaseTime', [7 *86400]); // 7 days
-  //     await dtoStaking.connect(user1).getReward();
-  //     await dtoStaking.connect(user2).getReward();
+    console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
+    console.log("tBUSD balance : " + (await tbusd.balanceOf(user1.address)).toString());
+    console.log("tDAI balance : " + (await tdai.balanceOf(user1.address)).toString());
 
-  //     const user1Balance = await erc20Mock.balanceOf(user1.address);
-  //     const user2Balance = await erc20Mock.balanceOf(user2.address)
-  //    expect(user2Balance ).to.be.equal(user1Balance *2);
-  // })
-  // it("stake, withdraw multip", async function (){
-  //     const users = [ user4, user5, user6,user7,user8,user9,user10,user11,user12,user13];
-  //     //stake
-  //     for(var i = 0; i<users.length;i++){
-  //         await dto.connect(owner).transfer(users[i].address,1000);
-  //         await dto.connect(users[i]).approve(dtoStaking.address,1000);
-  //         await dtoStaking.connect(users[i]).stake(1000);
-  //         expect(await dtoStaking.balanceOf(users[i].address)).to.be.equal(1000)
-  //     }
-  //     expect(await dtoStaking.totalSupply()).to.be.equal(10000)
-  //     expect(await dto.balanceOf(dtoStaking.address)).to.be.equal(10000);
-  //     //withdraw
-  //     for(var i = 0; i<users.length;i++){
-  //         await dtoStaking.connect(users[i]).withdraw(500);
-  //     expect(await dtoStaking.balanceOf(users[i].address)).to.be.equal(500)
-  //     }
-  //     expect(await dtoStaking.totalSupply()).to.be.equal(5000);
-  //     expect(await dto.balanceOf(dtoStaking.address)).to.be.equal(5000);
+    await crosschainstablecoinpool.connect(user1).swap([ethers.utils.parseEther('100'), ethers.utils.parseEther('100'), ethers.utils.parseEther('0')], [ethers.utils.parseEther('0'), ethers.utils.parseEther('0'), ethers.utils.parseEther('150')], user1.address)
+    
 
-  //     await ethers.provider.send('evm_increaseTime', [3 *86400]); // 3 days
-  //     //getUnlock
-  //     for(var i = 0; i<users.length;i++){ 
-  //     await  dtoStaking.connect(users[i]).getUnlock(users[i].address,0)
-  //     expect(await dto.balanceOf(users[i].address)).to.be.equal(500)
-  //     }
-  //       // getReward 
-  //     await erc20Mock.connect(owner).transfer(dtoStaking.address,10000000000)
-  //     await dtoStaking.notifyRewardAmount(10000000);
-  //     for(var i = 0; i<users.length;i++){ 
-  //         await dtoStaking.connect(users[i]).getReward();
-  //         expect(await erc20Mock.balanceOf(users[i].address) ).to.above(0);
-  //         //console.log((await erc20Mock.balanceOf(users[i].address)).toString())
+    console.log("====== After Swap =======");
+    console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
+    console.log("tBUSD balance : " + (await tbusd.balanceOf(user1.address)).toString());
+    console.log("tDAI balance : " + (await tdai.balanceOf(user1.address)).toString());
 
-  //     }
-  //        //withdraw 
-  //     for(var i = 0; i<users.length;i++){
-  //         await dtoStaking.connect(users[i]).withdraw(500);
-  //     expect(await dtoStaking.balanceOf(users[i].address)).to.be.equal(0)
-  //     }
-  //     expect(await dtoStaking.totalSupply()).to.be.equal(0);
-  //     expect(await dto.balanceOf(dtoStaking.address)).to.be.equal(0);
+    console.log("========================== ");
+    console.log("Total received LP user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
+    console.log("LP balance user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
 
-  //    await ethers.provider.send('evm_increaseTime', [3 *86400]); // 3 days
 
-  //    for(var i = 0; i<users.length;i++){ 
-  //     await  dtoStaking.connect(users[i]).getUnlock(users[i].address,0)
-  //     expect(await dto.balanceOf(users[i].address)).to.be.equal(1000)
-  //     }
-  //     // for(var i = 0; i<users.length;i++){ 
-  //     //     await dtoStaking.connect(users[i]).getReward();
-  //     //     expect(await erc20Mock.balanceOf(users[i].address) ).to.above(0);
-  //     //     console.log(i,((await erc20Mock.balanceOf(users[i].address)).toString()))
-  //     // }
-  // })
-  // it("upgrade contract", async function (){ 
-  //     const DtoStaking = await ethers.getContractFactory('DTOStakingUpgrade')
-  //     dtoStaking = await upgrades.upgradeProxy(dtoStaking.address,DtoStaking, [erc20Mock.address, dto.address, stakingTokenLock.address,0,0,7*86400,3*86400], { unsafeAllow: ['delegatecall'], kind: 'uups' }) //unsafeAllowCustomTypes: true,
-  //    await  dtoStaking.setNumbetTest(123)
-  //    expect(await dtoStaking.getNumberTest()).to.be.equal(123);
-  // })
+    await crosschainstablecoinpool.connect(user1).addLiquidity(user1.address, [ethers.utils.parseEther('100'), ethers.utils.parseEther('200'), ethers.utils.parseEther('300')])
+    console.log("====== check pool value =======");
+    console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
+    console.log("Total received LP user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
+    console.log("LP balance user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
+
+  })
+
+
+  it("WITHDRAW Test", async function () {
+
+    await tusdt.connect(user1).approve(crosschainstablecoinpool.address, ethers.utils.parseEther('10000'))
+    await tbusd.connect(user1).approve(crosschainstablecoinpool.address, ethers.utils.parseEther('10000'))
+    await tdai.connect(user1).approve(crosschainstablecoinpool.address, ethers.utils.parseEther('10000'))
+
+    await crosschainstablecoinpool.connect(user1).addLiquidity(user1.address, [ethers.utils.parseEther('100'), ethers.utils.parseEther('200'), ethers.utils.parseEther('300')])
+    console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
+    console.log("Total received LP user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
+    console.log("LP balance user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
+
+
+    await crosschainstablecoinpool.connect(user1).swap([ethers.utils.parseEther('50'), ethers.utils.parseEther('50'), ethers.utils.parseEther('0')], [ethers.utils.parseEther('0'), ethers.utils.parseEther('0'), ethers.utils.parseEther('90')], user1.address)
+    
+
+    console.log("====== After Swap =======");
+    console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
+    console.log("tBUSD balance : " + (await tbusd.balanceOf(user1.address)).toString());
+    console.log("tDAI balance : " + (await tdai.balanceOf(user1.address)).toString());
+
+    console.log("========================== ");
+    console.log("Total received LP user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
+    console.log("LP balance user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
+
+    await crosschainstablecoinpool.connect(user1).withdrawLiquidity(user1.address, ethers.utils.parseEther('40'), [ethers.utils.parseEther('10'), ethers.utils.parseEther('10'), ethers.utils.parseEther('15')])
+    console.log("====== withdraw test =======");
+    console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
+    console.log("Total received LP user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
+    console.log("LP balance user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
+
+  })
+
+  
 
 })
