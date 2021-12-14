@@ -257,7 +257,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
 // WITHDRAW LIQUIDITY FUNCTION
     function withdrawLiquidity(
         address _to,
-        uint256 totalWithdraw,
+        // uint256 totalWithdraw,
         uint256[3] memory amountsOut
     ) external returns (bool) {
         uint256 totalMinusLP ;
@@ -278,7 +278,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         totalMinusLP = totalOut.mul(totalSupply).div(totalPoolValue);
 
         // Make sure total withdraw is bigger than to sum of 3 token value the customer want to withdraw
-        require(totalWithdraw >= totalMinusLP);
+        // require(totalWithdraw >= totalMinusLP);
         // send token to Withdrawer
         IERC20Upgradeable(token0).safeTransfer(_to, amountsOut[0]);
         IERC20Upgradeable(token1).safeTransfer(_to, amountsOut[1]);
