@@ -37,7 +37,9 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     bytes4 private constant SELECTOR =
         bytes4(keccak256(bytes("transfer(address,uint256)")));
     uint256 totalPoolValue;
-    uint256 public swapFee; // 0.2% = 20/10000
+    uint256 public swapFee; /// 0.2% = 20/10000
+    uint256 public buyBackTreasury;
+    uint256 public totalFee;
     uint256 public constant PERCENTAGE = 10000;
 
     address public token0;
@@ -47,6 +49,8 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     uint8 public decimals0;
     uint8 public decimals1;
     uint8 public decimals2;
+    bool isEnableBuyBackTreasury;
+     
 
     // Because decimals may be different from one to the other, so we need convert all to 18 decimals token.
     uint256[3] convertedAmountsIn;
@@ -73,7 +77,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
             "CrossChainStableCoinPool: TRANSFER_FAILED"
         );
     }
-
+    
     // called once by the factory at time of deployment
     function initialize(
         address _token0,
@@ -82,7 +86,8 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     ) external initializer {
         __DTOUpgradeableBase_initialize();
         __CrossChainStableCoinLP_initialize();
-        swapFee = 20;
+        totalFee = 30;
+        isEnableBuyBackTreasury = false;
         unlocked = 1;
         token0 = _token0;
         token1 = _token1;
@@ -90,6 +95,36 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         decimals0 = IERC20(token0).decimals();
         decimals1 = IERC20(token1).decimals();
         decimals2 = IERC20(token2).decimals();
+    }
+
+    function setBuyBackTreasury(bool _isEnableBuyBackTreasury)
+        public onlyOwner
+        returns (bool)
+    {
+        if (_isEnableBuyBackTreasury != isEnableBuyBackTreasury) {
+            isEnableBuyBackTreasury = _isEnableBuyBackTreasury;
+        }
+        else {
+            return false;
+        }
+        return true;
+    }    
+
+    // function calculateTotalFee() public view returns(uint _totalFee) {
+    //     if (isEnableBuyBackTreasury == true) {
+    //         _totalFee = swapFee + buyBackTreasury;
+    //     } else {
+    //         _totalFee = swapFee;
+    //     }
+    // }
+    function calculateFee() public  {
+        if (isEnableBuyBackTreasury == true) {
+             swapFee = 20;
+             buyBackTreasury = 10;
+             require(totalFee == swapFee + buyBackTreasury);
+        } else {
+            swapFee = totalFee;
+        }
     }
 
     function convertTo18Decimals(address _token, uint256 amount)
@@ -113,7 +148,10 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
             );
         return totalPoolValue;
     }
-
+    function _calculatePoolValue() public view returns (uint _totalPoolValue) {
+        _totalPoolValue = totalPoolValue;
+        return _totalPoolValue;
+    }
 // ADDLIQUIDITY FUNCTION
     function addLiquidity(address _from, uint256[3] memory amountsIn)
         external
@@ -132,6 +170,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         }
 
         calculatePoolValue();
+        _calculatePoolValue();
         //calculate the total received LP that provider can received
         if (totalSupply == 0) {
             totalReceivedLP = totalAddIn;
@@ -205,8 +244,9 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         }
 
         // Make sure that Output is smaller than Input minus the swapfee
+        calculateFee();
         require(
-            totalOut <= totalIn - (totalIn * swapFee) / PERCENTAGE,
+            totalOut <= totalIn - (totalIn * totalFee) / PERCENTAGE,
             "insufficient amount in"
         );
 
@@ -274,6 +314,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         }
 
         calculatePoolValue();
+        _calculatePoolValue();
         //calculate the total minus LP that withdrawer have to pay
         totalMinusLP = totalOut.mul(totalSupply).div(totalPoolValue);
 
