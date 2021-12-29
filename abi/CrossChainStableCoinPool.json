@@ -142,39 +142,15 @@
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "amount0In",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "amountIn",
+        "type": "uint256[]"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "amount1In",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount2In",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount0Out",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount1Out",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount2Out",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "amountOut",
+        "type": "uint256[]"
       },
       {
         "indexed": true,
@@ -309,9 +285,9 @@
         "type": "address"
       },
       {
-        "internalType": "uint256[3]",
+        "internalType": "uint256[]",
         "name": "amountsIn",
-        "type": "uint256[3]"
+        "type": "uint256[]"
       }
     ],
     "name": "addLiquidity",
@@ -476,34 +452,14 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "name": "decimals0",
-    "outputs": [
-      {
-        "internalType": "uint8",
-        "name": "",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "decimals1",
-    "outputs": [
-      {
-        "internalType": "uint8",
-        "name": "",
-        "type": "uint8"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "decimals2",
     "outputs": [
       {
         "internalType": "uint8",
@@ -517,19 +473,9 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_token0",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_token1",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_token2",
-        "type": "address"
+        "internalType": "address[]",
+        "name": "stableCoin",
+        "type": "address[]"
       }
     ],
     "name": "initialize",
@@ -654,14 +600,33 @@
   {
     "inputs": [
       {
-        "internalType": "uint256[3]",
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "stableCoinList",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256[]",
         "name": "amountsIn",
-        "type": "uint256[3]"
+        "type": "uint256[]"
       },
       {
-        "internalType": "uint256[3]",
+        "internalType": "uint256[]",
         "name": "amountsOut",
-        "type": "uint256[3]"
+        "type": "uint256[]"
       },
       {
         "internalType": "address",
@@ -695,45 +660,6 @@
         "internalType": "string",
         "name": "",
         "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "token0",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "token1",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "token2",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -870,9 +796,9 @@
         "type": "address"
       },
       {
-        "internalType": "uint256[3]",
+        "internalType": "uint256[]",
         "name": "amountsOut",
-        "type": "uint256[3]"
+        "type": "uint256[]"
       }
     ],
     "name": "withdrawLiquidity",

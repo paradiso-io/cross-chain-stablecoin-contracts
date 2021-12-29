@@ -13,6 +13,8 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     using SafeMath for uint256;
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
+    
+
     event AddLiquidity(address indexed sender, uint256 amount0);
     event Burn(
         address indexed sender,
@@ -23,12 +25,8 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     );
     event Swap(
         address indexed sender,
-        uint256 amount0In,
-        uint256 amount1In,
-        uint256 amount2In,
-        uint256 amount0Out,
-        uint256 amount1Out,
-        uint256 amount2Out,
+        uint256[] amountIn,
+        uint256[] amountOut,
         address indexed to
     );
     event Sync(uint256 reserve0, uint256 reserve1, uint256 reserve2);
@@ -42,18 +40,20 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     uint256 public totalFee;
     uint256 public constant PERCENTAGE = 10000;
 
-    address public token0;
-    address public token1;
-    address public token2;
+    // address public token0;
+    // address public token1;
+    // address public token2;
+    address[] public stableCoinList;
+    uint8[] public decimals0;
 
-    uint8 public decimals0;
-    uint8 public decimals1;
-    uint8 public decimals2;
+    // uint8 public decimals0;
+    // uint8 public decimals1;
+    // uint8 public decimals2;
     bool isEnableBuyBackTreasury;
      
 
     // Because decimals may be different from one to the other, so we need convert all to 18 decimals token.
-    uint256[3] convertedAmountsIn;
+    
     uint256[3] convertedAmountsOut;
 
     uint256 private unlocked;
@@ -80,21 +80,26 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     
     // called once by the factory at time of deployment
     function initialize(
-        address _token0,
-        address _token1,
-        address _token2
+        //uint256 length,
+        address[] memory stableCoin
     ) external initializer {
         __DTOUpgradeableBase_initialize();
         __CrossChainStableCoinLP_initialize();
         totalFee = 30;
         isEnableBuyBackTreasury = false;
         unlocked = 1;
-        token0 = _token0;
-        token1 = _token1;
-        token2 = _token2;
-        decimals0 = IERC20(token0).decimals();
-        decimals1 = IERC20(token1).decimals();
-        decimals2 = IERC20(token2).decimals();
+// list of stableCoin
+        //stableCoin = new address[](length);
+        stableCoinList = new address[](stableCoin.length);
+        for (uint256 i = 0; i < stableCoinList.length; i++) {
+            stableCoinList[i] = stableCoin[i];
+        }
+
+        //Decimals of stableCoin
+        decimals0  = new uint8[](stableCoin.length);
+        for (uint256 i = 0; i < stableCoinList.length; i++) {
+            decimals0[i] = IERC20(stableCoinList[i]).decimals();
+        }
     }
 
     function setBuyBackTreasury(bool _isEnableBuyBackTreasury)
@@ -136,33 +141,31 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     }
 
     function calculatePoolValue() public returns (uint256) {
-        totalPoolValue =
-            IERC20(token0).balanceOf(address(this)).mul(
-                (10**(18 - IERC20(token0).decimals()))
-            ) +
-            IERC20(token1).balanceOf(address(this)).mul(
-                (10**(18 - IERC20(token1).decimals()))
-            ) +
-            IERC20(token2).balanceOf(address(this)).mul(
-                (10**(18 - IERC20(token2).decimals()))
-            );
+
+        for (uint256 i = 0; i < stableCoinList.length; i++) {
+            totalPoolValue += IERC20(stableCoinList[i]).balanceOf(address(this)).mul
+                (10**(18 - IERC20(stableCoinList[i]).decimals()));
+        }
         return totalPoolValue;
-    }
+    }    
+    
     function _calculatePoolValue() public view returns (uint _totalPoolValue) {
         _totalPoolValue = totalPoolValue;
         return _totalPoolValue;
     }
 // ADDLIQUIDITY FUNCTION
-    function addLiquidity(address _from, uint256[3] memory amountsIn)
+    function addLiquidity(address _from, uint256[] memory amountsIn)
         external
         returns (uint256)
     {
+        require(amountsIn.length == stableCoinList.length, "input not enough StableCoin list");
         uint256 totalReceivedLP = 0;
-
+        uint256[] memory convertedAmountsIn = new uint256[](stableCoinList.length);
         // Calculate the input amount to 18 decimals token
-        convertedAmountsIn[0] = convertTo18Decimals(token0, amountsIn[0]);
-        convertedAmountsIn[1] = convertTo18Decimals(token1, amountsIn[1]);
-        convertedAmountsIn[2] = convertTo18Decimals(token2, amountsIn[2]);
+
+        for (uint256 i = 0; i < stableCoinList.length; i++) {
+            convertedAmountsIn[i] = convertTo18Decimals(stableCoinList[i], amountsIn[i]);
+        }
         // calculate total amount input
         uint256 totalAddIn = 0;
         for (uint256 i = 0; i < amountsIn.length; i++) {
@@ -178,21 +181,14 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
             totalReceivedLP = totalAddIn.mul(totalSupply).div(totalPoolValue);
         }
         
-        IERC20Upgradeable(token0).safeTransferFrom(
+
+        for (uint256 i = 0; i < amountsIn.length; i++) {
+            IERC20Upgradeable(stableCoinList[i]).safeTransferFrom(
             msg.sender,
             address(this),
-            amountsIn[0]
+            amountsIn[i]
         );
-        IERC20Upgradeable(token1).safeTransferFrom(
-            msg.sender,
-            address(this),
-            amountsIn[1]
-        );
-        IERC20Upgradeable(token2).safeTransferFrom(
-            msg.sender,
-            address(this),
-            amountsIn[2]
-        );
+        }
         // send LP token to provider
         _mint(_from, totalReceivedLP);
         emit AddLiquidity(msg.sender, totalReceivedLP);
@@ -203,39 +199,43 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
 // SWAP FUNCTION
     // this low-level function should be called from a contract which performs important safety checks
     function swap(
-        uint256[3] memory amountsIn,
-        uint256[3] memory amountsOut,
+        uint256[] memory amountsIn,
+        uint256[] memory amountsOut,
         address to
     ) external lock {
         // make sure we have enough amount in the pool for withdrawing
+        
+        for (uint256 i = 0; i < stableCoinList.length; i++) {
+            require(
+            amountsOut[i] <= IERC20(stableCoinList[i]).balanceOf(address(this)),
+            "insufficient amount out"
+        );
+        }
         require(
-            amountsOut[0] <= IERC20(token0).balanceOf(address(this)),
-            "insufficient amount out 0"
+            amountsIn.length == stableCoinList.length,
+            "Wrong stablecoin list amount in "
         );
         require(
-            amountsOut[1] <= IERC20(token1).balanceOf(address(this)),
-            "insufficient amount out 1"
+            amountsOut.length == stableCoinList.length,
+            "Wrong stablecoin list amount Out "
         );
-        require(
-            amountsOut[2] <= IERC20(token2).balanceOf(address(this)),
-            "insufficient amount out 2"
-        );
-
+        uint256[] memory convertedAmountsIn = new uint256[](stableCoinList.length);
+        uint256[] memory convertedAmountsOut = new uint256[](stableCoinList.length);
         // Convert the input amount to 18 decimals token
-        convertedAmountsIn[0] = amountsIn[0].mul(10**(18 - decimals0));
-        convertedAmountsIn[1] = amountsIn[1].mul(10**(18 - decimals1));
-        convertedAmountsIn[2] = amountsIn[2].mul(10**(18 - decimals2));
+        for (uint256 i = 0; i < stableCoinList.length; i++) {
+           // convertedAmountsIn[i] = amountsIn[i].mul(10**(18 - decimals0[i]));
+           convertedAmountsIn[i] = convertTo18Decimals(stableCoinList[i], amountsIn[i]);
+        }
 
         // calculate total amount input
         uint256 totalIn = 0;
         for (uint256 i = 0; i < amountsIn.length; i++) {
             totalIn += convertedAmountsIn[i];
         }
-
         // Convert the out amount to 18 decimals token
-        convertedAmountsOut[0] = convertTo18Decimals(token0, amountsOut[0]);
-        convertedAmountsOut[1] = convertTo18Decimals(token1, amountsOut[1]);
-        convertedAmountsOut[2] = convertTo18Decimals(token2, amountsOut[2]);
+        for (uint256 i = 0; i < stableCoinList.length; i++) {
+            convertedAmountsOut[i] = convertTo18Decimals(stableCoinList[i], amountsOut[i]);
+        }
 
         // calculate total amount output
         uint256 totalOut = 0;
@@ -250,62 +250,54 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
             "insufficient amount in"
         );
 
-        IERC20Upgradeable(token0).safeTransferFrom(
+
+        for (uint256 i = 0; i < stableCoinList.length; i++) {
+            IERC20Upgradeable(stableCoinList[i]).safeTransferFrom(
             msg.sender,
             address(this),
-            amountsIn[0]
+            amountsIn[i]
         );
-        IERC20Upgradeable(token1).safeTransferFrom(
-            msg.sender,
-            address(this),
-            amountsIn[1]
-        );
-        IERC20Upgradeable(token2).safeTransferFrom(
-            msg.sender,
-            address(this),
-            amountsIn[2]
-        );
+        }
 
         //transfer token to recipient
-        IERC20Upgradeable(token0).safeTransfer(
-            to,
-            amountsOut[0]
-        );
-        IERC20Upgradeable(token1).safeTransfer(
-            to,
-            amountsOut[1]
-        );
-        IERC20Upgradeable(token2).safeTransfer(
-            to,
-            amountsOut[2]
-        );
 
+        for (uint256 i = 0; i < stableCoinList.length; i++) {
+            IERC20Upgradeable(stableCoinList[i]).safeTransfer(
+            to,
+            amountsOut[i]
+        );
+        }
         // add swapfee to totalPoolValue
         // totalPoolValue = totalPoolValue + (totalIn * swapFee) / PERCENTAGE;
 
         emit Swap(
             msg.sender,
-            amountsIn[0],
-            amountsIn[1],
-            amountsIn[2],
-            amountsOut[0],
-            amountsOut[1],
-            amountsOut[2],
+            amountsIn,
+            amountsOut,
             to
         );
     }
 // WITHDRAW LIQUIDITY FUNCTION
     function withdrawLiquidity(
         address _to,
-        // uint256 totalWithdraw,
-        uint256[3] memory amountsOut
+       // uint256 totalWithdraw,
+        uint256[] memory amountsOut
     ) external returns (bool) {
+        // require(
+        //     totalWithdraw >= totalIn - (totalIn * totalFee) / PERCENTAGE,
+        //     "insufficient amount in"
+        // );
+        require(
+            amountsOut.length == stableCoinList.length,
+            "Wrong stablecoin list amount Out "
+        );
         uint256 totalMinusLP ;
+        uint256[] memory convertedAmountsOut = new uint256[](stableCoinList.length);
 
         // Calculate the withdraw amount to 18 decimals token
-        convertedAmountsOut[0] = convertTo18Decimals(token0, amountsOut[0]);
-        convertedAmountsOut[1] = convertTo18Decimals(token1, amountsOut[1]);
-        convertedAmountsOut[2] = convertTo18Decimals(token2, amountsOut[2]);
+        for (uint256 i = 0; i < stableCoinList.length; i++) {
+           convertedAmountsOut[i] = convertTo18Decimals(stableCoinList[i], amountsOut[i]);
+        }
 
         // calculate total amount output
         uint256 totalOut = 0;
@@ -321,10 +313,9 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         // Make sure total withdraw is bigger than to sum of 3 token value the customer want to withdraw
         // require(totalWithdraw >= totalMinusLP);
         // send token to Withdrawer
-        IERC20Upgradeable(token0).safeTransfer(_to, amountsOut[0]);
-        IERC20Upgradeable(token1).safeTransfer(_to, amountsOut[1]);
-        IERC20Upgradeable(token2).safeTransfer(_to, amountsOut[2]);
-
+        for (uint256 i = 0; i < stableCoinList.length; i++) {
+           IERC20Upgradeable(stableCoinList[i]).safeTransfer(_to, amountsOut[i]);
+        }
         // burn LP after withdrawing
         _burn(msg.sender, totalMinusLP);
     }
