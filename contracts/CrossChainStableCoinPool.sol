@@ -79,10 +79,10 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     }
     
     // called once by the factory at time of deployment
-    function initialize(
+    function __CrossChainStableCoinPool_initialize(
         //uint256 length,
         address[] memory stableCoin
-    ) external initializer {
+    ) public initializer {
         __DTOUpgradeableBase_initialize();
         __CrossChainStableCoinLP_initialize();
         totalFee = 30;
@@ -155,7 +155,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     }
 // ADDLIQUIDITY FUNCTION
     function addLiquidity(address _from, uint256[] memory amountsIn)
-        external
+        public
         returns (uint256)
     {
         require(amountsIn.length == stableCoinList.length, "input not enough StableCoin list");
@@ -202,7 +202,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         uint256[] memory amountsIn,
         uint256[] memory amountsOut,
         address to
-    ) external lock {
+    ) public lock {
         // make sure we have enough amount in the pool for withdrawing
         
         for (uint256 i = 0; i < stableCoinList.length; i++) {
@@ -250,14 +250,13 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
             "insufficient amount in"
         );
 
-
-        for (uint256 i = 0; i < stableCoinList.length; i++) {
-            IERC20Upgradeable(stableCoinList[i]).safeTransferFrom(
-            msg.sender,
-            address(this),
-            amountsIn[i]
-        );
-        }
+        // for (uint256 i = 0; i < stableCoinList.length; i++) {
+        //     IERC20Upgradeable(stableCoinList[i]).safeTransferFrom(
+        //     msg.sender,
+        //     address(this),
+        //     amountsIn[i]
+        // );
+        // }
 
         //transfer token to recipient
 
