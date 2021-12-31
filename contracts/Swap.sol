@@ -3,6 +3,7 @@ pragma solidity >=0.5.16;
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "./libraries/Governance.sol";
 import "./interfaces/IBridge.sol";
+import "./interfaces/ICrossChainStableCoinPool.sol";
 import "./CrossChainStableCoinPool.sol";
 import "./libraries/DTOUpgradeableBase.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
@@ -10,21 +11,26 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 
-contract Swap is CrossChainStableCoinPool, Governable, ReentrancyGuardUpgradeable {
+contract Swap is Governable, ReentrancyGuardUpgradeable, DTOUpgradeableBase {
     using SafeERC20Upgradeable for IERC20Upgradeable;
     using SafeMathUpgradeable for uint256;
     IBridge internal bridge;
+    ICrossChainStableCoinPool internal crossChain;
+    address[] public stableCoins;
     // string[3] internal toTokens;
     event RequestBridge(uint256[] amountsOut);
     event ClaimToken(uint256[] amountsOut);
 
-    function initialize(address _bridgeContract, address[] memory stableCoin) public initializer {
+    function initialize(address _bridgeContract, address _crossChainContract)
+        public
+        initializer
+    {
+        __DTOUpgradeableBase_initialize();
         __Governable_initialize();
-        __CrossChainStableCoinPool_initialize(stableCoin);
         bridge = IBridge(_bridgeContract);
-        // toTokens[0] = ERC20Upgradeable(token0).name();
-        // toTokens[1] = ERC20Upgradeable(token1).name();
-        // toTokens[2] = ERC20Upgradeable(token2).name();
+        crossChain = ICrossChainStableCoinPool(_crossChainContract);
+        stableCoins = new address[](crossChain.getStableCoinList().length);
+        stableCoins = crossChain.getStableCoinList();
     }
 
     function setMinApprovers(uint256 _val) public onlyGovernance {
@@ -65,15 +71,18 @@ contract Swap is CrossChainStableCoinPool, Governable, ReentrancyGuardUpgradeabl
         bridge.setGovernanceFee(_fee);
     }
 
-    function alreadyClaims(bytes32 _msghash) public returns (bool)  {
+    function alreadyClaims(bytes32 _msghash) public returns (bool) {
         bridge.alreadyClaims(_msghash);
     }
 
-    function tokenMap(uint256 _chainId, address _token) public returns (address) {
+    function tokenMap(uint256 _chainId, address _token)
+        public
+        returns (address)
+    {
         bridge.tokenMap(_chainId, _token);
     }
 
-function requestBridge(
+    function requestBridge(
         address _tokenAddress,
         address _toAddr,
         uint256 _amount,
@@ -81,9 +90,9 @@ function requestBridge(
         uint256[] memory _amountsOut
     ) public payable nonReentrant {
         if (!isBridgeToken(_tokenAddress)) {
-            IERC20(_tokenAddress).approve(address(bridge), _amount); 
+            IERC20(_tokenAddress).approve(address(bridge), _amount);
             safeTransferIn(_tokenAddress, msg.sender, _amount);
-        }else{
+        } else {
             ERC20BurnableUpgradeable(_tokenAddress).burnFrom(
                 msg.sender,
                 _amount
@@ -93,7 +102,7 @@ function requestBridge(
             _tokenAddress,
             _toAddr,
             _amount,
-             _toChainId
+            _toChainId
         );
         emit RequestBridge(
             // toTokens,
@@ -127,27 +136,43 @@ function requestBridge(
             _name,
             _symbol,
             _decimals
-        ); 
+        );
 
-        for(uint256 i = 0; i < stableCoinList.length; i++) {
-            if(keccak256(abi.encodePacked(_name)) == keccak256(abi.encodePacked(ERC20Upgradeable(stableCoinList[i]).name()))){
-                uint256[] memory amountsIn = new uint256[](stableCoinList.length);
+        uint256[] memory amountsIn = new uint256[](stableCoins.length);
+        for (uint256 i = 0; i < stableCoins.length; i++) {
+            if (
+                keccak256(abi.encodePacked(_name)) ==
+                keccak256(
+                    abi.encodePacked(ERC20Upgradeable(stableCoins[i]).name())
+                )
+            ) {
                 amountsIn[i] = _amount;
-                swap(amountsIn, _amountsOut, _toAddr);
             }
+            ERC20Upgradeable(stableCoins[i]).approve(
+                address(crossChain),
+                _amount
+            );
         }
-        
+        for (uint256 i = 0; i < stableCoins.length; i++) {
+            require(
+                amountsIn[i] <=
+                    IERC20(stableCoins[i]).balanceOf(address(this)),
+                "Swap: insufficient amount in."
+            );
+        }
+        crossChain.swap(amountsIn, _amountsOut, _toAddr);
+
         emit ClaimToken(
             // toTokens,
             _amountsOut
-        );   
+        );
     }
 
     function isBridgeToken(address _token) public view returns (bool) {
         return bridge.isBridgeToken(_token);
     }
 
-   function safeTransferIn(
+    function safeTransferIn(
         address _token,
         address _fromAddr,
         uint256 _amount
@@ -164,5 +189,4 @@ function requestBridge(
             );
         }
     }
-
 }
