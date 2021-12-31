@@ -27,14 +27,30 @@ module.exports = async (hre) => {
     log(' ');
 
     log('  Deploying Cross Chain Stable Coin Pool...');
-    const CrossChainStableCoinPool = await ethers.getContractFactory('CrossChainStableCoinPool');
-    const CrossChainStableCoinPoolInstance = await CrossChainStableCoinPool.deploy() // variable of constructor
-    const factory = await CrossChainStableCoinPoolInstance.deployed()
-    log('  - CrossChainStableCoinPool:         ', factory.address);
+   // const CrossChainStableCoinPool = await ethers.getContractFactory('CrossChainStableCoinPool');
+
+
+
+   const ERC20Mock = await ethers.getContractFactory('ERC20Mock');
+   const ERC20MockInstance = await ERC20Mock.deploy("dtoUSD", "dtoUSD", deployer, '1000000000000000000000000000')
+   const mock = await ERC20MockInstance.deployed()
+   log('  - ERC20Mock1:         ', mock.address);
+   const ERC20MockInstance1 = await ERC20Mock.deploy("tUSDT", "ttUSDT", deployer, '1000000000000000000000000000')
+   const mock1 = await ERC20MockInstance1.deployed()
+   log('  - ERC20Mock2:         ', mock1.address);
+   const ERC20MockInstance2 = await ERC20Mock.deploy("tBUSD", "ttBUSD", deployer, '1000000000000000000000000000')
+   const mock2 = await ERC20MockInstance2.deployed()
+   log('  - ERC20Mock3:         ', mock2.address);
+
+
+
+    const CrossChainStableCoinPool = await ethers.getContractFactory("CrossChainStableCoinPool");
+    crosschainstablecoinpool = await upgrades.deployProxy(CrossChainStableCoinPool, [[mock.address, mock1.address, mock2.address]], { unsafeAllow: ['delegatecall'], kind: 'uups' }) //unsafeAllowCustomTypes: true,
+    log('  - CrossChainStableCoinPool:         ', crosschainstablecoinpool.address);
     deployData['CrossChainStableCoinPool'] = {
       abi: getContractAbi('CrossChainStableCoinPool'),
-      address: factory.address,
-      deployTransaction: factory.deployTransaction,
+      address: crosschainstablecoinpool.address,
+      deployTransaction: crosschainstablecoinpool.deployTransaction,
     }
 
     // log('  Deploying Cross Chain Stable Coin Pool Router...');

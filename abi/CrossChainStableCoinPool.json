@@ -473,6 +473,25 @@
   {
     "inputs": [
       {
+        "internalType": "bool",
+        "name": "_isEnableBuyBackTreasury",
+        "type": "bool"
+      }
+    ],
+    "name": "enableBuyBackTreasury",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address[]",
         "name": "stableCoin",
         "type": "address[]"
@@ -581,12 +600,31 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_buyBackTreasuryFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "setBuyBackTreasuryFee",
+    "outputs": [
+      {
         "internalType": "bool",
-        "name": "_isEnableBuyBackTreasury",
+        "name": "",
         "type": "bool"
       }
     ],
-    "name": "setBuyBackTreasury",
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_totalFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "setTotalFee",
     "outputs": [
       {
         "internalType": "bool",
@@ -794,6 +832,11 @@
         "internalType": "address",
         "name": "_to",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "totalWithdraw",
+        "type": "uint256"
       },
       {
         "internalType": "uint256[]",

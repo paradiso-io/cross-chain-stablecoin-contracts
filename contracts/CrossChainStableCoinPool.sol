@@ -8,6 +8,7 @@ import "./interfaces/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     using SafeMath for uint256;
@@ -85,7 +86,8 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     ) external initializer {
         __DTOUpgradeableBase_initialize();
         __CrossChainStableCoinLP_initialize();
-        totalFee = 30;
+        totalFee = 20;
+        buyBackTreasury = 3;
         isEnableBuyBackTreasury = false;
         unlocked = 1;
 // list of stableCoin
@@ -102,7 +104,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         }
     }
 
-    function setBuyBackTreasury(bool _isEnableBuyBackTreasury)
+    function enableBuyBackTreasury(bool _isEnableBuyBackTreasury)
         public onlyOwner
         returns (bool)
     {
@@ -114,20 +116,29 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         }
         return true;
     }    
+    function setTotalFee(uint256 _totalFee)
+        public onlyOwner
+        returns (bool)
+    {
+        require(_totalFee <= 30,"Total fee must lower than 0.3 %");
+        totalFee = _totalFee;
+        return true;
+    }    
+    function setBuyBackTreasuryFee(uint256 _buyBackTreasuryFee)
+        public onlyOwner
+        returns (bool)
+    {
+        require(_buyBackTreasuryFee <= 10,"Buy back treasury fee must lower than 0.1 %");
+        buyBackTreasury = _buyBackTreasuryFee;
+        return true;
+    }    
 
-    // function calculateTotalFee() public view returns(uint _totalFee) {
-    //     if (isEnableBuyBackTreasury == true) {
-    //         _totalFee = swapFee + buyBackTreasury;
-    //     } else {
-    //         _totalFee = swapFee;
-    //     }
-    // }
     function calculateFee() public  {
         if (isEnableBuyBackTreasury == true) {
-             swapFee = 20;
-             buyBackTreasury = 10;
-             require(totalFee == swapFee + buyBackTreasury);
+             swapFee = totalFee - buyBackTreasury;
+             require(totalFee == swapFee + buyBackTreasury, "error fee calculate");
         } else {
+            require(isEnableBuyBackTreasury == true, "Buy back treasury must be set to false");
             swapFee = totalFee;
         }
     }
@@ -280,7 +291,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
 // WITHDRAW LIQUIDITY FUNCTION
     function withdrawLiquidity(
         address _to,
-       // uint256 totalWithdraw,
+        uint256 totalWithdraw,
         uint256[] memory amountsOut
     ) external returns (bool) {
         // require(
@@ -304,7 +315,10 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         for (uint256 i = 0; i < amountsOut.length; i++) {
             totalOut += convertedAmountsOut[i];
         }
-
+        require(
+            totalWithdraw.mul(10**18) >= totalOut,
+            "Total withdraw is smaller than total amount out "
+        );
         calculatePoolValue();
         _calculatePoolValue();
         //calculate the total minus LP that withdrawer have to pay
@@ -317,6 +331,6 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
            IERC20Upgradeable(stableCoinList[i]).safeTransfer(_to, amountsOut[i]);
         }
         // burn LP after withdrawing
-        _burn(msg.sender, totalMinusLP);
+        _burn(msg.sender, totalWithdraw.mul(10**18));
     }
 }

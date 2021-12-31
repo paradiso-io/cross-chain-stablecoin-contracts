@@ -131,6 +131,8 @@ describe('Cross chain test', async function () {
     await crosschainstablecoinpool.connect(user1).addLiquidity(user1.address, [ethers.utils.parseEther('100'), ethers.utils.parseEther('200'), ethers.utils.parseEther('300')])
     console.log("====== check pool value =======");
     console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
+    console.log("tBUSD balance : " + (await tbusd.balanceOf(user1.address)).toString());
+    console.log("tDAI balance  : " + (await tdai.balanceOf(user1.address)).toString());
     console.log("Total received LP user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
     console.log("LP balance user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
     console.log ("==> POOL VALUES: " + (await crosschainstablecoinpool._calculatePoolValue()).toString());
@@ -146,6 +148,8 @@ describe('Cross chain test', async function () {
 
     await crosschainstablecoinpool.connect(user1).addLiquidity(user1.address, [ethers.utils.parseEther('100'), ethers.utils.parseEther('200'), ethers.utils.parseEther('300')])
     console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
+    console.log("tBUSD balance : " + (await tbusd.balanceOf(user1.address)).toString());
+    console.log("tDAI balance  : " + (await tdai.balanceOf(user1.address)).toString());
     console.log("Total received LP user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
     console.log("LP balance user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
 
@@ -162,12 +166,13 @@ describe('Cross chain test', async function () {
     // console.log("Total received LP user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
     // console.log("LP balance user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
 
-    await crosschainstablecoinpool.connect(user1).withdrawLiquidity(user1.address, [ethers.utils.parseEther('10'), ethers.utils.parseEther('10'), ethers.utils.parseEther('15')])
+    await crosschainstablecoinpool.connect(user1).withdrawLiquidity(user1.address, 40, [ethers.utils.parseEther('10'), ethers.utils.parseEther('10'), ethers.utils.parseEther('15')])
     console.log("====== withdraw test =======");
     console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
+    console.log("tBUSD balance : " + (await tbusd.balanceOf(user1.address)).toString());
+    console.log("tDAI balance  : " + (await tdai.balanceOf(user1.address)).toString());
     console.log("Total received LP user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
     console.log("LP balance user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
-
   })
 
   
