@@ -38,13 +38,10 @@ const {
       const mock2 = await ERC20MockInstance2.deployed()
       const ERC20MockInstance3 = await ERC20Mock.deploy("USD3", "USD3", deployer, '9000000000000000000000000000')
       const mock3 = await ERC20MockInstance3.deployed()
-      const ERC20MockInstance4 = await ERC20Mock.deploy("USD4", "USD4", deployer, '9000000000000000000000000000')
-      const mock4 = await ERC20MockInstance4.deployed()
 
       log('  - ERC20Mock1:         ', mock1.address);
       log('  - ERC20Mock2:         ', mock2.address);
       log('  - ERC20Mock3:         ', mock3.address);
-      log('  - ERC20Mock4:         ', mock4.address);
     //   deployData['ERC20Mock'] = {
     //     abi: getContractAbi('ERC20Mock'),
     //     address: mock.address,

@@ -28,8 +28,8 @@ module.exports = async (hre) => {
 
     log('  Deploying Cross Chain Stable Coin Pool...');
     const CrossChainStableCoinPool = await ethers.getContractFactory('CrossChainStableCoinPool');
-    // const crossChain = await upgrades.deployProxy(CrossChainStableCoinPool, [["0xB9e821acF423C565d01f4B489053EcFF73d00f29", "0xa31905c0eF4df2e47Be3CA0810a8734Ce585d95B", "0x91B99b1b2Be717912bc25b179C99eC578d6f150F", "0xB9F7162977A9d9b757544A904bC1372ef3CeE3b3"]], { unsafeAllow: ['delegatecall'],unsafeAllowCustomTypes: true, kind: 'uups', gasLimit: 1000000 })
-    const crossChain = await upgrades.deployProxy(CrossChainStableCoinPool, [["0xcdd3c40b95a670aC8dec8178B7AB960333f70618", "0xE3A44478278F6Ce3D0BB45BdFcF1eFca62B8856D", "0x3f9aA65d9Ffa728733843dd4895c9E888c674dd1", "0x22d0A378602EE893872Fac245c30D02EE561C30b"]], { unsafeAllow: ['delegatecall'],unsafeAllowCustomTypes: true, kind: 'uups', gasLimit: 1000000 })
+    // const crossChain = await upgrades.deployProxy(CrossChainStableCoinPool, [["0x7327De0069D0F6Bfe147AadFD82Ffe9B002B0BF7", "0x43A0526651Db60232014367596c076140337889B", "0x545d7f2a1478149d6A485A117b2A74E5535650dB", "0x2959BF46eA1eaeF6c28228749aAfDB696C0C4215"]], { unsafeAllow: ['delegatecall'],unsafeAllowCustomTypes: true, kind: 'uups', gasLimit: 1000000 })
+    const crossChain = await upgrades.deployProxy(CrossChainStableCoinPool, [["0x9a4C0e05a2107C5632DBe0AbdB0E9dac03226fD7", "0xc99CfCb559F73515358341f22dD72bF05559c696", "0x8941CAF5E98F83A8234d7ebe38Bc88e5B296890B"]], { unsafeAllow: ['delegatecall'],unsafeAllowCustomTypes: true, kind: 'uups', gasLimit: 1000000 })
     // const CrossChainStableCoinPoolInstance = await CrossChainStableCoinPool.deploy() // variable of constructor
     // const factory = await CrossChainStableCoinPoolInstance.deployed()
     log('  - CrossChainStableCoinPool:         ', crossChain.address);

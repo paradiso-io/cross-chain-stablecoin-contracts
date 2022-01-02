@@ -18,8 +18,8 @@ contract Swap is Governable, ReentrancyGuardUpgradeable, DTOUpgradeableBase {
     ICrossChainStableCoinPool internal crossChain;
     address[] public stableCoins;
     // string[3] internal toTokens;
-    event RequestBridge(uint256[] amountsOut);
-    event ClaimToken(uint256[] amountsOut);
+    event RequestSwap(uint256[] amountsOut);
+    event ClaimSwap(uint256[] amountsOut);
 
     function initialize(address _bridgeContract, address _crossChainContract)
         public
@@ -82,7 +82,7 @@ contract Swap is Governable, ReentrancyGuardUpgradeable, DTOUpgradeableBase {
         bridge.tokenMap(_chainId, _token);
     }
 
-    function requestBridge(
+    function requestSwap(
         address _tokenAddress,
         address _toAddr,
         uint256 _amount,
@@ -104,13 +104,13 @@ contract Swap is Governable, ReentrancyGuardUpgradeable, DTOUpgradeableBase {
             _amount,
             _toChainId
         );
-        emit RequestBridge(
+        emit RequestSwap(
             // toTokens,
             _amountsOut
         );
     }
 
-    function claimToken(
+    function claimSwap(
         address _originToken,
         address _toAddr,
         uint256 _amount,
@@ -162,7 +162,7 @@ contract Swap is Governable, ReentrancyGuardUpgradeable, DTOUpgradeableBase {
         }
         crossChain.swap(amountsIn, _amountsOut, _toAddr);
 
-        emit ClaimToken(
+        emit ClaimSwap(
             // toTokens,
             _amountsOut
         );
