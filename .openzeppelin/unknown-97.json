@@ -115,6 +115,11 @@
       "address": "0x8661e4c45Dc9762d5dB81294ba0F96608a8965b2",
       "txHash": "0x2f15e706c9ab1b6d00b5a131e41647accc311d28da0bbcbd6d33fd1545908176",
       "kind": "uups"
+    },
+    {
+      "address": "0x5c90180C82e31EB4f202BB577dF2A59C2e00c336",
+      "txHash": "0xf862a64ffd8bf4094243f3218311a7a9024f25a35a852fa06262333867606fb3",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -2353,6 +2358,118 @@
             "label": "contract IBridge"
           },
           "t_contract(ICrossChainStableCoinPool)5389": {
+            "label": "contract ICrossChainStableCoinPool"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          },
+          "t_bool": {
+            "label": "bool"
+          }
+        }
+      }
+    },
+    "3ba9ee84c0079099a0d5ec62be41198b40a0eb21796d6cb4674aab70b0653d4f": {
+      "address": "0x3d3c280E5136cbE1a8a58c88A7Ba54a93678bA21",
+      "txHash": "0xc17359fbe431a7d6b0c12d930e5b809fa2b58acdc17096cd46a47942f5c7cf32",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:39"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:44"
+          },
+          {
+            "contract": "ERC1967UpgradeUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:215"
+          },
+          {
+            "contract": "UUPSUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:81"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:31"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:82"
+          },
+          {
+            "contract": "Governable",
+            "label": "governance",
+            "type": "t_address",
+            "src": "contracts/libraries/Governance.sol:17"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "_status",
+            "type": "t_uint256",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:38"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:68"
+          },
+          {
+            "contract": "Swap",
+            "label": "bridge",
+            "type": "t_contract(IBridge)5243",
+            "src": "contracts/Swap.sol:17"
+          },
+          {
+            "contract": "Swap",
+            "label": "crossChain",
+            "type": "t_contract(ICrossChainStableCoinPool)5387",
+            "src": "contracts/Swap.sol:18"
+          },
+          {
+            "contract": "Swap",
+            "label": "stableCoins",
+            "type": "t_array(t_address)dyn_storage",
+            "src": "contracts/Swap.sol:19"
+          }
+        ],
+        "types": {
+          "t_contract(IBridge)5243": {
+            "label": "contract IBridge"
+          },
+          "t_contract(ICrossChainStableCoinPool)5387": {
             "label": "contract ICrossChainStableCoinPool"
           },
           "t_array(t_address)dyn_storage": {

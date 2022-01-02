@@ -72,14 +72,14 @@ contract Swap is Governable, ReentrancyGuardUpgradeable, DTOUpgradeableBase {
     }
 
     function alreadyClaims(bytes32 _msghash) public returns (bool) {
-        bridge.alreadyClaims(_msghash);
+        return bridge.alreadyClaims(_msghash);
     }
 
     function tokenMap(uint256 _chainId, address _token)
         public
         returns (address)
     {
-        bridge.tokenMap(_chainId, _token);
+        return bridge.tokenMap(_chainId, _token);
     }
 
     function requestSwap(

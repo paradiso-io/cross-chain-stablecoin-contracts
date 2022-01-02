@@ -31,8 +31,8 @@ const {
       // const CrossChainStableCoinPoolInstance = await CrossChainStableCoinPool.deploy() // variable of constructor
       // const factory = await CrossChainStableCoinPoolInstance.deployed()
  
-      const swap = await upgrades.deployProxy(Swap, ["0x814523595f6D9219c3dEB14271fef51B5FC5fcce", "0x338De1C169e0794027acCD8682003AC4a126c37e"], { unsafeAllow: ['delegatecall'],unsafeAllowCustomTypes: true, kind: 'uups', gasLimit: 1000000 })   
-    // const swap = await upgrades.deployProxy(Swap, ["0x40e2Ea2B4a9924e0eb1d1042963B8B61DaE25787", "0x131E9C5aF75Fc9f6c24D9619F9244EbABA684ef1"], { unsafeAllow: ['delegatecall'],unsafeAllowCustomTypes: true, kind: 'uups', gasLimit: 1000000 }) 
+      // const swap = await upgrades.deployProxy(Swap, ["0x814523595f6D9219c3dEB14271fef51B5FC5fcce", "0x338De1C169e0794027acCD8682003AC4a126c37e"], { unsafeAllow: ['delegatecall'],unsafeAllowCustomTypes: true, kind: 'uups', gasLimit: 1000000 })   
+    const swap = await upgrades.deployProxy(Swap, ["0x40e2Ea2B4a9924e0eb1d1042963B8B61DaE25787", "0x131E9C5aF75Fc9f6c24D9619F9244EbABA684ef1"], { unsafeAllow: ['delegatecall'],unsafeAllowCustomTypes: true, kind: 'uups', gasLimit: 1000000 }) 
       log('  - Swap:         ', swap.address);
       deployData['Swap'] = {
         abi: getContractAbi('Swap'),
