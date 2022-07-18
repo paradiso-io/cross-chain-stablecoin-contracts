@@ -1,4 +1,4 @@
-pragma solidity >=0.5.16;
+pragma solidity >= 0.5.16;
 
 import "./interfaces/ICrossChainStableCoinLP.sol";
 import "./libraries/SafeMath.sol";

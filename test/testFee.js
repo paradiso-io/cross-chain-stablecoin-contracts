@@ -38,8 +38,8 @@ describe('Cross chain test input Fee', async function () {
   it("AddLiquidity Test", async function () {
 
     //await crosschainstablecoinpool.add(user1.address,100000);
-     poolValue = await crosschainstablecoinpool.calculatePoolValue();
-    
+    poolValue = await crosschainstablecoinpool.calculatePoolValue();
+
     console.log("pool  balance: " + balanceOfLP);
     console.log("Owner address: " + owner.address);
     console.log("user1 address: " + user1.address);
@@ -49,7 +49,7 @@ describe('Cross chain test input Fee', async function () {
     await tusdt.connect(user1).approve(crosschainstablecoinpool.address, ethers.utils.parseEther('1000'))
     await tbusd.connect(user1).approve(crosschainstablecoinpool.address, ethers.utils.parseEther('1000'))
     await tdai.connect(user1).approve(crosschainstablecoinpool.address, ethers.utils.parseEther('1000'))
-    
+
     await crosschainstablecoinpool.connect(user1).addLiquidity(user1.address, [ethers.utils.parseEther('500'), ethers.utils.parseEther('600'), ethers.utils.parseEther('400')])
     console.log("tUSDT balance in 18 decimals : " + (await tusdt.balanceOf(user1.address)).toString());
     console.log("tBUSD balance in 18 decimals : " + (await tbusd.balanceOf(user1.address)).toString());
@@ -61,7 +61,7 @@ describe('Cross chain test input Fee', async function () {
     console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
     console.log("Total received LP user1 in 18 decimals : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
     console.log("LP balance user1 in 18 decimals : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
-    console.log (poolValue.toString());
+    console.log(poolValue.toString());
   })
 
   it("SWAP Test", async function () {
@@ -90,7 +90,7 @@ describe('Cross chain test input Fee', async function () {
     console.log("tDAI balance : " + (await tdai.balanceOf(user1.address)).toString());
 
     await crosschainstablecoinpool.connect(user1).swap([ethers.utils.parseEther('100'), ethers.utils.parseEther('100'), ethers.utils.parseEther('0')], [ethers.utils.parseEther('0'), ethers.utils.parseEther('0'), ethers.utils.parseEther('150')], user1.address)
-    
+
 
     console.log("====== After Swap =======");
     console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());

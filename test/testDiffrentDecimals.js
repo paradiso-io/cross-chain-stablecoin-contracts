@@ -38,8 +38,8 @@ describe('Cross chain test', async function () {
   it("AddLiquidity Test", async function () {
 
     //await crosschainstablecoinpool.add(user1.address,100000);
-     poolValue = await crosschainstablecoinpool.calculatePoolValue();
-    
+    poolValue = await crosschainstablecoinpool.calculatePoolValue();
+
     console.log("pool  balance: " + balanceOfLP);
     console.log("Owner address: " + owner.address);
     console.log("user1 address: " + user1.address);
@@ -49,8 +49,8 @@ describe('Cross chain test', async function () {
     await tusdt.connect(user1).approve(crosschainstablecoinpool.address, ethers.utils.parseEther('1000'))
     await tbusd.connect(user1).approve(crosschainstablecoinpool.address, ethers.utils.parseEther('100'))
     await tdai.connect(user1).approve(crosschainstablecoinpool.address, ethers.utils.parseEther('10'))
-    
-    
+
+
     await crosschainstablecoinpool.connect(user1).addLiquidity(user1.address, [ethers.utils.parseEther('500'), ethers.utils.parseEther('60'), ethers.utils.parseEther('4')])
     console.log("tUSDT balance in 18 decimals : " + (await tusdt.balanceOf(user1.address)).toString());
     console.log("tBUSD balance in 18 decimals : " + (await tbusd.balanceOf(user1.address)).toString());
@@ -63,7 +63,7 @@ describe('Cross chain test', async function () {
     console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
     console.log("Total received LP user1 in 18 decimals : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
     console.log("LP balance user1 in 18 decimals : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
-    console.log (poolValue.toString());
+    console.log(poolValue.toString());
   })
 
   it("SWAP Test", async function () {
@@ -77,7 +77,7 @@ describe('Cross chain test', async function () {
     console.log("Total received LP user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
     console.log("LP balance user1 : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
 
-    
+
     console.log("pool  balance: " + balanceOfLP);
     console.log("Owner address: " + owner.address);
     console.log("user1 address: " + user1.address);
@@ -89,7 +89,7 @@ describe('Cross chain test', async function () {
     console.log("tDAI balance : " + (await tdai.balanceOf(user1.address)).toString());
 
     await crosschainstablecoinpool.connect(user1).swap([ethers.utils.parseEther('0'), ethers.utils.parseEther('10'), ethers.utils.parseEther('2')], [ethers.utils.parseEther('250'), ethers.utils.parseEther('0'), ethers.utils.parseEther('0')], user1.address)
-    
+
 
     console.log("====== After Swap =======");
     console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
@@ -116,7 +116,7 @@ describe('Cross chain test', async function () {
 
 
     await crosschainstablecoinpool.connect(user1).swap([ethers.utils.parseEther('50'), ethers.utils.parseEther('0'), ethers.utils.parseEther('2')], [ethers.utils.parseEther('0'), ethers.utils.parseEther('24'), ethers.utils.parseEther('0')], user1.address)
-    
+
 
     console.log("====== After Swap =======");
     console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
@@ -135,6 +135,6 @@ describe('Cross chain test', async function () {
 
   })
 
-  
+
 
 })

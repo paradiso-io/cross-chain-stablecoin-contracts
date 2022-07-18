@@ -1,4 +1,4 @@
-pragma solidity >= 0.8.0;
+pragma solidity >=0.8.0;
 
 import "./interfaces/ICrossChainStableCoinLP.sol";
 import "./CrossChainStableCoinLP.sol";
@@ -9,7 +9,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract CrossChainStableCoinPool is CrossChainStableCoinLP {
+contract StableCoinPair is CrossChainStableCoinLP {
     using SafeMath for uint256;
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -21,6 +21,15 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         uint256 amount2,
         address indexed to
     );
+    event SwapInPair(
+        address indexed sender,
+        address tokenIn,
+        address tokenOut,
+        uint256 pair,
+        uint256 amountIn,
+        uint256 amountOut,
+        address indexed to
+    );
     event Swap(
         address indexed sender,
         uint256[] amountIn,
@@ -28,6 +37,12 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         address indexed to
     );
     event Sync(uint256 reserve0, uint256 reserve1, uint256 reserve2);
+
+    event PairCreated(
+        address indexed token0,
+        address indexed token1,
+        uint256 pair
+    );
 
     // uint public constant override MINIMUM_LIQUIDITY = 10**3;
     bytes4 private constant SELECTOR =
@@ -37,6 +52,8 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     uint256 public buyBackTreasury;
     uint256 public totalFee;
     uint256 public constant PERCENTAGE = 10000;
+    mapping(address => mapping(address => uint256)) public getPair; // uint256 is index allPairs.length
+    uint256[] public allPairs;
 
     // address public token0;
     // address public token1;
@@ -100,6 +117,37 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         }
     }
 
+    function addStableCoinList(address newStableCoin)
+        external
+        onlyOwner
+        returns (bool)
+    {
+        for (uint256 i = 0; i < stableCoinList.length; i++) {
+            require(newStableCoin != stableCoinList[i], "StableCoin exist");
+        }
+        stableCoinList.push(newStableCoin);
+        return true;
+    }
+
+    function lockUpStableCoin(address tokenA) public returns (bool) {
+        uint256 count = 0;
+        for (uint256 i = 0; i < stableCoinList.length; i++) {
+            if (tokenA == stableCoinList[i]) {
+                count += 1;
+            }
+        }
+        if (count == 0) return false;
+        if (count >= 0) return true;
+    }
+
+    function viewGetPair(address tokenA, address tokenB)
+        public
+        view
+        returns (uint256)
+    {
+        return getPair[tokenA][tokenB];
+    }
+
     function enableBuyBackTreasury(bool _isEnableBuyBackTreasury)
         public
         onlyOwner
@@ -116,6 +164,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
     function setTotalFee(uint256 _totalFee) public onlyOwner returns (bool) {
         require(_totalFee <= 30, "Total fee must lower than 0.3 %");
         totalFee = _totalFee;
+        calculateFee();
         return true;
     }
 
@@ -129,10 +178,46 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
             "Buy back treasury fee must lower than 0.1 %"
         );
         buyBackTreasury = _buyBackTreasuryFee;
+        calculateFee();
         return true;
     }
 
-    function calculateFee() public {
+    function allPairsLength() external view returns (uint256) {
+        return allPairs.length;
+    }
+
+    function createPair(address tokenA, address tokenB)
+        external
+        onlyOwner
+        returns (uint256 pair)
+    {
+        require(tokenA != tokenB, "TokenA has to differ with TokenB");
+        (address token0, address token1) = tokenA < tokenB
+            ? (tokenA, tokenB)
+            : (tokenB, tokenA);
+        pair = allPairs.length + 1;
+        require(token0 != address(0), "Token should be not : ZERO_ADDRESS");
+        require(getPair[token0][token1] < 1, "ERROR: PAIR_EXISTS"); // single check is sufficient
+
+        require(
+            lockUpStableCoin(tokenA) != false,
+            "Token not in stable coin list"
+        );
+        require(
+            lockUpStableCoin(tokenB) != false,
+            "Token not in stable coin list"
+        );
+
+        // GET index allPairs.length
+
+        getPair[token0][token1] = pair;
+        getPair[token1][token0] = pair; // populate mapping in the reverse direction
+        allPairs.push(pair);
+        emit PairCreated(token0, token1, pair);
+    }
+
+    // Calculate SWAP fee (swapFee = totalFee - buybackFee)
+    function calculateFee() public returns (uint256) {
         if (isEnableBuyBackTreasury == true) {
             swapFee = totalFee - buyBackTreasury;
             require(
@@ -141,11 +226,12 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
             );
         } else {
             require(
-                isEnableBuyBackTreasury == true,
+                isEnableBuyBackTreasury == false,
                 "Buy back treasury must be set to false"
             );
             swapFee = totalFee;
         }
+        return swapFee;
     }
 
     function convertTo18Decimals(address _token, uint256 amount)
@@ -154,6 +240,14 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         returns (uint256)
     {
         return (amount.mul((10**(18 - IERC20(_token).decimals()))));
+    }
+
+    function convertFrom18Decimals(address _token, uint256 amount)
+        public
+        view
+        returns (uint256)
+    {
+        return (amount.div((10**(18 - IERC20(_token).decimals()))));
     }
 
     function calculatePoolValue() public returns (uint256) {
@@ -170,8 +264,8 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         return _totalPoolValue;
     }
 
-
     // ADDLIQUIDITY FUNCTION
+
     function addLiquidity(address _from, uint256[] memory amountsIn)
         external
         returns (uint256)
@@ -199,7 +293,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         }
 
         calculatePoolValue();
-       
+
         //calculate the total received LP that provider can received
         if (totalSupply == 0) {
             totalReceivedLP = totalAddIn;
@@ -224,91 +318,80 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         return totalReceivedLP;
     }
 
-    // SWAP FUNCTION
-    // this low-level function should be called from a contract which performs important safety checks
-    function swap(
-        uint256[] memory amountsIn,
-        uint256[] memory amountsOut,
+    // SWAP stableCoin in a specific PAIR
+    function swapInPair(
+        address _tokenIn,
+        address _tokenOut,
+        uint256 pair,
+        uint256 _amountIn,
+        // uint256 _amountOut,
         address to
     ) external lock {
         // make sure we have enough amount in the pool for withdrawing
+        require(getPair[_tokenIn][_tokenOut] == pair, "wrong pair");
+        // require(
+        //     _amountOut <= IERC20(_tokenOut).balanceOf(address(this)),
+        //     "insufficient amount out"
+        // );
+        require(to != _tokenIn && to != _tokenOut, "INVALID TO ADDRESS");
 
-        for (uint256 i = 0; i < stableCoinList.length; i++) {
-            require(
-                amountsOut[i] <=
-                    IERC20(stableCoinList[i]).balanceOf(address(this)),
-                "insufficient amount out"
-            );
-        }
-        require(
-            amountsIn.length == stableCoinList.length,
-            "Wrong stablecoin list amount in "
-        );
-        require(
-            amountsOut.length == stableCoinList.length,
-            "Wrong stablecoin list amount Out "
-        );
-        uint256[] memory convertedAmountsIn = new uint256[](
-            stableCoinList.length
-        );
-        uint256[] memory convertedAmountsOut = new uint256[](
-            stableCoinList.length
-        );
+        uint256 convertedAmountIn;
+        uint256 convertedAmountOut;
         // Convert the input amount to 18 decimals token
-        for (uint256 i = 0; i < stableCoinList.length; i++) {
-            // convertedAmountsIn[i] = amountsIn[i].mul(10**(18 - decimals0[i]));
-            convertedAmountsIn[i] = convertTo18Decimals(
-                stableCoinList[i],
-                amountsIn[i]
-            );
-        }
 
-        // calculate total amount input
-        uint256 totalIn = 0;
-        for (uint256 i = 0; i < amountsIn.length; i++) {
-            totalIn += convertedAmountsIn[i];
-        }
+        // convertedAmountsIn[i] = amountsIn[i].mul(10**(18 - decimals0[i]));
+        convertedAmountIn = convertTo18Decimals(_tokenIn, _amountIn);
+
         // Convert the out amount to 18 decimals token
-        for (uint256 i = 0; i < stableCoinList.length; i++) {
-            convertedAmountsOut[i] = convertTo18Decimals(
-                stableCoinList[i],
-                amountsOut[i]
-            );
-        }
 
-        // calculate total amount output
-        uint256 totalOut = 0;
-        for (uint256 i = 0; i < amountsOut.length; i++) {
-            totalOut += convertedAmountsOut[i];
-        }
+        //convertedAmountOut = convertTo18Decimals(_tokenOut, _amountOut);
 
         // Make sure that Output is smaller than Input minus the swapfee
+
         calculateFee();
+
+        // Calculate AmountOut
+
+        convertedAmountOut =
+            convertedAmountIn -
+            (convertedAmountIn * totalFee) /
+            PERCENTAGE;
+
+        // Convert Amountout to tokenOut's decimals.
+
+        uint256 _amountOut = convertFrom18Decimals(
+            _tokenOut,
+            convertedAmountOut
+        );
+
         require(
-            totalOut <= totalIn - (totalIn * totalFee) / PERCENTAGE,
+            convertedAmountOut <=
+                convertedAmountIn - (convertedAmountIn * totalFee) / PERCENTAGE,
             "insufficient amount in"
         );
 
-        for (uint256 i = 0; i < stableCoinList.length; i++) {
-            IERC20Upgradeable(stableCoinList[i]).safeTransferFrom(
-                msg.sender,
-                address(this),
-                amountsIn[i]
-            );
-        }
+        IERC20Upgradeable(_tokenIn).safeTransferFrom(
+            msg.sender,
+            address(this),
+            _amountIn
+        );
 
         //transfer token to recipient
 
-        for (uint256 i = 0; i < stableCoinList.length; i++) {
-            IERC20Upgradeable(stableCoinList[i]).safeTransfer(
-                to,
-                amountsOut[i]
-            );
-        }
-        // add swapfee to totalPoolValue
-         totalPoolValue = totalPoolValue + (totalIn * swapFee) / PERCENTAGE;
+        IERC20Upgradeable(_tokenOut).safeTransfer(to, _amountOut);
 
-        emit Swap(msg.sender, amountsIn, amountsOut, to);
+        // add swapfee to totalPoolValue
+         totalPoolValue = totalPoolValue + (convertedAmountIn * swapFee) / PERCENTAGE;
+
+        emit SwapInPair(
+            msg.sender,
+            _tokenIn,
+            _tokenOut,
+            pair,
+            _amountIn,
+            _amountOut,
+            to
+        );
     }
 
     // WITHDRAW LIQUIDITY FUNCTION
@@ -348,7 +431,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
             "Total withdraw is smaller than total amount out "
         );
         calculatePoolValue();
-
+        // _calculatePoolValue();
         //calculate the total minus LP that withdrawer have to pay
         totalMinusLP = totalOut.mul(totalSupply).div(totalPoolValue);
 
