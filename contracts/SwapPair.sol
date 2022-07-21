@@ -83,15 +83,13 @@ contract SwapPair is ISwapPair, CrossChainStableCoinLP {
         );
     }
 
-    
-
     // called once by the factory at time of deployment
     function initialize(address _token0, address _token1) external override {
         // require(msg.sender == factory, "DTO : FORBIDDEN"); // sufficient check
         token0 = _token0;
         token1 = _token1;
-       // __DTOUpgradeableBase_initialize();
-       // __CrossChainStableCoinLP_initialize();
+        // __DTOUpgradeableBase_initialize();
+        // __CrossChainStableCoinLP_initialize();
         totalFee = 20;
         governanceFee = 0;
         lpFee = 20;
@@ -173,7 +171,8 @@ contract SwapPair is ISwapPair, CrossChainStableCoinLP {
         _totalPoolValue = totalPoolValue;
         return _totalPoolValue;
     }
-    function viewUserLP(address _from) public view returns(uint256){
+
+    function viewUserLP(address _from) public view returns (uint256) {
         return balanceOf[msg.sender];
     }
 
@@ -216,6 +215,7 @@ contract SwapPair is ISwapPair, CrossChainStableCoinLP {
 
         // Transfer token to contract to add liquidity
         // Only transfer the minimum token0 and token1 to contract
+
         IERC20Upgradeable(_tokenA).approve(address(this), _amountInA);
         IERC20Upgradeable(_tokenA).safeTransferFrom(
             msg.sender,
@@ -303,10 +303,7 @@ contract SwapPair is ISwapPair, CrossChainStableCoinLP {
         require(tokenA == token0, "invalid pair");
         require(tokenB == token1, "invalid pair");
         uint256 availableLP = balanceOf[msg.sender];
-        require(
-            _withdrawLP <= availableLP,
-            "insufficient LP token"
-        );
+        require(_withdrawLP <= availableLP, "insufficient LP token");
 
         console.log("_withdrawLP : ", _withdrawLP);
         console.log("availableLP : ", availableLP);
@@ -315,9 +312,14 @@ contract SwapPair is ISwapPair, CrossChainStableCoinLP {
         console.log("_totalSupply: ", _totalSupply);
 
         // calculate total amount output
-        uint256 amountOut = _withdrawLP.mul(totalPoolValue).div(_totalSupply);
+        uint256 amountOut = _withdrawLP
+            .mul(totalPoolValue)
+            .div(_totalSupply)
+            .div(2);
         uint256 convertedAmountOut0 = convertTo18Decimals(token0, amountOut);
         uint256 convertedAmountOut1 = convertTo18Decimals(token1, amountOut);
+        console.log("convertedAmountOut0 : ", convertedAmountOut0);
+        console.log("convertedAmountOut1 : ", convertedAmountOut1);
 
         require(
             convertedAmountOut0 <=
@@ -341,12 +343,9 @@ contract SwapPair is ISwapPair, CrossChainStableCoinLP {
         _burn(msg.sender, _withdrawLP);
 
         // send token to Withdrawer
-        console.log("A");
 
         IERC20Upgradeable(token0).safeTransfer(_to, convertedAmountOut0);
         IERC20Upgradeable(token1).safeTransfer(_to, convertedAmountOut1);
-
-        console.log("B");
 
         emit WithdrawLiquidity(msg.sender, token0, token1, _withdrawLP);
     }

@@ -16,11 +16,20 @@ describe('Cross chain test', async function () {
         console.log("Your tUSDT address: " + tusdt.address);
         console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
 
+        await tusdt.mint(user2.address);
+
+        console.log("USER2 tUSDT balance: ", (await tusdt.balanceOf(user2.address)).toString() )
+
         let tBUSD = await ethers.getContractFactory("ERC20Mock")
         let tBUSDInstance = await tBUSD.deploy("tBUSD", "ttBUSD", user1.address, ethers.utils.parseEther('2000')) // 2000 * 10^18 
         tbusd = await tBUSDInstance.deployed()
         console.log("Your tBUSD address: " + tbusd.address);
         console.log("tBUSD balance : " + (await tbusd.balanceOf(user1.address)).toString());
+        await tbusd.mint(user2.address);
+
+        console.log("USER2 tBUSD balance: ", (await tbusd.balanceOf(user2.address)).toString() )
+
+
 
         let tDAI = await ethers.getContractFactory("ERC20Mock")
         let tDAIInstance = await tDAI.deploy("tDAI", "ttDAI", user1.address, ethers.utils.parseEther('2000'))  // 2000 * 10^18
@@ -93,11 +102,22 @@ describe('Cross chain test', async function () {
         // pool value
         console.log("pool value: ", (await pairContract.connect(user1.address).viewPoolValue()).toString())
 
+
+        console.log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+        console.log('                SWAP liquidity               ');
+        console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
+        
+        await tbusd.connect(user2).approve(pairContract.address, ethers.utils.parseEther('188'))
+        await pairContract.connect(user2).swapInPair(tbusd.address, tdai.address, ethers.utils.parseEther('188'), user2.address);
+        console.log("pool value: ", (await pairContract.connect(user1.address).viewPoolValue()).toString())
+
+
+
         console.log('\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
         console.log('                Withdraw liquidity               ');
         console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n');
         await expect(pairContract.connect(user2).withdrawLiquidity(user1.address, tdai.address, tbusd.address, ethers.utils.parseEther('80'))).to.be.revertedWith("insufficient LP token")
-        await pairContract.connect(user1).withdrawLiquidity(user1.address, tdai.address, tbusd.address, ethers.utils.parseEther('180'))
+        await pairContract.connect(user1).withdrawLiquidity(user1.address, tdai.address, tbusd.address, ethers.utils.parseEther('10'))
 
         // lp received
         console.log("balanced lp: ", (await pairContract.connect(user1.address).viewUserLP(user1.address)).toString())
