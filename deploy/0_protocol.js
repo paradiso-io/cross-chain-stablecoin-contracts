@@ -30,7 +30,10 @@ module.exports = async (hre) => {
   // const CrossChainStableCoinPool = await ethers.getContractFactory('CrossChainStableCoinPool');
 
 
-if (chainId == 31337) return;
+  if (chainId == 31337) return;
+
+
+  
   const ERC20Mock = await ethers.getContractFactory('ERC20Mock');
   const ERC20MockInstance = await ERC20Mock.deploy("dtoUSD", "dtoUSD", deployer, '1000000000000000000000000000')
   const mock = await ERC20MockInstance.deployed()

@@ -88,7 +88,7 @@ describe('Cross chain test', async function () {
     console.log("tUSDT balance : " + (await tusdt.balanceOf(user1.address)).toString());
     console.log("Total received LP user1 in 18 decimals : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
     console.log("LP balance user1 in 18 decimals : " + (await crosschainstablecoinpool.balanceOf(user1.address)).toString());
-    
+
     poolValue = await crosschainstablecoinpool.calculatePoolValue();
 
     console.log("==> POOL VALUES: " + poolValue.toString());

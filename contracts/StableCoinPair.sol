@@ -381,7 +381,10 @@ contract StableCoinPair is CrossChainStableCoinLP {
         IERC20Upgradeable(_tokenOut).safeTransfer(to, _amountOut);
 
         // add swapfee to totalPoolValue
-         totalPoolValue = totalPoolValue + (convertedAmountIn * swapFee) / PERCENTAGE;
+        totalPoolValue =
+            totalPoolValue +
+            (convertedAmountIn * swapFee) /
+            PERCENTAGE;
 
         emit SwapInPair(
             msg.sender,

@@ -1,4 +1,4 @@
-pragma solidity >= 0.8.0;
+pragma solidity >=0.8.0;
 
 import "./interfaces/ICrossChainStableCoinLP.sol";
 import "./CrossChainStableCoinLP.sol";
@@ -141,7 +141,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
             );
         } else {
             require(
-                isEnableBuyBackTreasury == true,
+                isEnableBuyBackTreasury == false,
                 "Buy back treasury must be set to false"
             );
             swapFee = totalFee;
@@ -169,7 +169,6 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         _totalPoolValue = totalPoolValue;
         return _totalPoolValue;
     }
-
 
     // ADDLIQUIDITY FUNCTION
     function addLiquidity(address _from, uint256[] memory amountsIn)
@@ -199,7 +198,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
         }
 
         calculatePoolValue();
-       
+
         //calculate the total received LP that provider can received
         if (totalSupply == 0) {
             totalReceivedLP = totalAddIn;
@@ -306,7 +305,7 @@ contract CrossChainStableCoinPool is CrossChainStableCoinLP {
             );
         }
         // add swapfee to totalPoolValue
-         totalPoolValue = totalPoolValue + (totalIn * swapFee) / PERCENTAGE;
+        totalPoolValue = totalPoolValue + (totalIn * swapFee) / PERCENTAGE;
 
         emit Swap(msg.sender, amountsIn, amountsOut, to);
     }
