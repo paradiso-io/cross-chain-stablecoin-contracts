@@ -88,8 +88,8 @@ contract SwapPair is ISwapPair, CrossChainStableCoinLP {
         // require(msg.sender == factory, "DTO : FORBIDDEN"); // sufficient check
         token0 = _token0;
         token1 = _token1;
-        // __DTOUpgradeableBase_initialize();
-        // __CrossChainStableCoinLP_initialize();
+        //__DTOUpgradeableBase_initialize();
+         __CrossChainStableCoinLP_initialize();
         totalFee = 20;
         governanceFee = 0;
         lpFee = 20;
